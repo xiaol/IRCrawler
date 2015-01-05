@@ -1,0 +1,13 @@
+/target
+*/target
+*/**/target
+/build
+/dbs
+/eggs
+/logs
+/items
+/project.egg-info
+.DS_Store
+.idea
+twistd.pid
+*.pyc
