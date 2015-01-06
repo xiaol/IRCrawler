@@ -46,3 +46,34 @@ class NewsItem(scrapy.Item):
         print "sourceSiteName is %s" %self['sourceSiteName']
         print "description is %s" %self['description']
         print "sourceUrl is %s" %self['sourceUrl']
+
+class PicNewsItem(scrapy.Item):
+    _id=scrapy.Field()
+    title=scrapy.Field()
+    content=scrapy.Field()
+    imgUrls=scrapy.Field()
+    description=scrapy.Field()
+    sourceUrl=scrapy.Field()
+    updateTime=scrapy.Field()
+    sourceSiteName=scrapy.Field()
+    category=scrapy.Field()
+    subcategory=scrapy.Field()
+    keyword=scrapy.Field()
+    tags=scrapy.Field()
+
+    def printItem(self):
+        print 'title is %s' %self['title']
+        print 'content is %s'%self['content']
+        print 'description is %s' %self['description']
+        print 'imgUrl is %s' %self['imgUrls']
+        print 'category is %s' %self['category']
+        print 'updateTime is %s' %self['updateTime']
+        print 'sourceName is %s' %self['sourceSiteName']
+
+class DetailContentItem(scrapy.Item):
+    _id=scrapy.Field()
+    content=scrapy.Field()
+
+    def printItem(self):
+        print "_id is %s" %self['_id']
+        print "content is %s" %self['content']
