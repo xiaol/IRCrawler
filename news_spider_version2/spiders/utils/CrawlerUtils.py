@@ -1,4 +1,7 @@
 #coding=utf-8
+import urllib2
+import charade
+
 __author__ = 'galois'
 
 import re
@@ -279,6 +282,12 @@ class CrawlerUtils:
         return re.sub(cls.stylePat,'',content)
 
     @classmethod
+    def removeUnwantedTag(cls,content):
+        if content==None:
+            return None
+        return re.sub(cls.tagPatDel,'',content)
+
+    @classmethod
     def map_to_Category(cls,rawCategory):
         if rawCategory:
             category=rawCategory
@@ -399,3 +408,19 @@ class CrawlerUtils:
         if imgBefore & len(img_text_elem):
             img_text_infos.append(img_text_infos)
         return img_text_infos
+
+    @classmethod
+    def getHtmlContentUnicode(cls,url):
+        try:
+            request=urllib2.Request(url)
+            connection=urllib2.urlopen(request,timeout=5)
+            data=connection.read()
+            encoding=connection.headers['content-type'].lower().split('charset=')[-1]
+            if encoding.lower() == 'text/html':
+                encoding = charade.detect(data)['encoding']
+            if encoding:
+                data = data.decode(encoding=encoding,errors='ignore')
+            return data
+        except Exception,e:
+            print str(e)
+            return None

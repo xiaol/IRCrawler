@@ -7,8 +7,8 @@ from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 class SinaSportsSpider(SportsBaseSpider):
     name='SportsSinaSpider'
     allowed_domains=['sports.sina.com.cn']
-    start_urls=['http://sports.sina.com.cn/']
-    # start_urls=['http://sports.sina.com.cn/g/laliga/2014-12-22/10217456696.shtml']
+    # start_urls=['http://sports.sina.com.cn/']
+    start_urls=['http://sports.sina.com.cn/g/laliga/2014-12-q/10217456696.shtml']
 
     source_site='新浪体育'
 
@@ -80,6 +80,7 @@ class SinaSportsSpider(SportsBaseSpider):
                     if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result+'\n\n'
                         listInfos.append({'txt':result})
+                        print "txt : %s" %result
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     #提取时间

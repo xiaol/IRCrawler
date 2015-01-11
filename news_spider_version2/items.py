@@ -34,6 +34,8 @@ class NewsItem(scrapy.Item):
     sourceUrl=scrapy.Field()
     #源网站的名称
     sourceSiteName=scrapy.Field()
+    #网页的tag
+    tag=scrapy.Field()
 
     def printSelf(self):
         print " _id is %s" %self['_id']
@@ -42,10 +44,10 @@ class NewsItem(scrapy.Item):
         print "content is %s" %self['content']
         print "imgUrl is %s" %self['imgUrl']
         print "updateTime is %s" %self['updateTime']
-        print "publisher is %s" %self['publisher']
         print "sourceSiteName is %s" %self['sourceSiteName']
         print "description is %s" %self['description']
         print "sourceUrl is %s" %self['sourceUrl']
+        print "tag is %s" %self['tag']
 
 class PicNewsItem(scrapy.Item):
     _id=scrapy.Field()
