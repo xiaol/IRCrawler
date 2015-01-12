@@ -16,9 +16,9 @@ class JandanColdNewsSpider(scrapy.Spider):
     name='JandanCodeNews'
     allowed_domains=['jandan.net']
 
-    start_urls=['http://jandan.net/tag/%E5%86%B7%E6%96%B0%E9%97%BB','http://jandan.net/tag/wtf','http://jandan.net/tag/sex',
-                'http://jandan.net/tag/爷有钱','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90',
-                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC']
+    start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
+                'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
+                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
     # start_urls=['http://jandan.net/tag/%E7%AC%A8%E8%B4%BC']
 
@@ -26,7 +26,7 @@ class JandanColdNewsSpider(scrapy.Spider):
 
     root_class='0度'
     #一级分类下面的频道
-    channel='冷新闻'
+    default_channel='冷新闻'
      #源网站的名称
     sourceSiteName='煎蛋'
 
@@ -47,6 +47,10 @@ class JandanColdNewsSpider(scrapy.Spider):
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
 
     html_parser = HTMLParser.HTMLParser()
+    channel_map={'wtf':'冷新闻','WTF':'冷新闻','sex':'冷新闻','SEX':'冷新闻','爷有钱':'冷新闻',
+       'diy':'冷知识','DIY':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识',
+        '笨贼':'冷幽默','熊孩子':'冷幽默'
+    }
 
     def parse(self,response):
 
@@ -72,7 +76,7 @@ class JandanColdNewsSpider(scrapy.Spider):
         item=NewsItem()
 
         item['root_class']=self.extractRootClass(response)
-        item['channel']=self.extractChannel(response)
+
         item['updateTime']=self.extractTime(response)
         item['title']=self.extractTitle(response)
         item['content']=self.extractContent(response)
@@ -81,6 +85,7 @@ class JandanColdNewsSpider(scrapy.Spider):
         item['sourceSiteName']=self.extractSourceSiteName(response)
         item['tag']=self.extractTag(response)
         item['description']=self.extractDesc(response)
+        item['channel']=self.extractChannel(response,item)
         item['_id']=self.generateItemId(item)
 
         item.printSelf()
@@ -127,8 +132,14 @@ class JandanColdNewsSpider(scrapy.Spider):
     def extractRootClass(self,response):
         return self.root_class
 
-    def extractChannel(self,response):
-        return self.channel
+    def extractChannel(self,response,item):
+        if item['tag']==None:
+            return self.default_channel
+        channel=self.channel_map[item['tag'][0].lower().encode('utf-8')]
+        if channel:
+            print "channel is %s " %channel
+            return channel
+        return self.default_channel
 
     def extractContent(self,response):
         rawContent=response.xpath('//div[@class="post f"]').extract()
