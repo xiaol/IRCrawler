@@ -49,6 +49,50 @@ class NewsItem(scrapy.Item):
         print "sourceUrl is %s" %self['sourceUrl']
         print "tag is %s" %self['tag']
 
+    def cloneInfoFromDict(self,dict_obj):
+        keys=['root_class','channel','content','imgUrl',
+              'updateTime','sourceSiteName','description','sourceUrl','tag']
+        if dict_obj==None:
+            return
+        for key in keys:
+            if key in dict_obj:
+                self[key]=dict_obj[key]
+
+
+class PartialNewsItem(scrapy.Item):
+    # item 的唯一标识 用源网址
+    _id=scrapy.Field()
+    #比如0度，36度，等一级分类
+    root_class=scrapy.Field()
+    #一级分类下面的频道
+    channel=scrapy.Field()
+    title=scrapy.Field()
+
+     #item 的缩略图
+    imgUrl=scrapy.Field()
+    #item 生成的时间
+    updateTime=scrapy.Field()
+    #item 的描述
+    description=scrapy.Field()
+    sourceUrl=scrapy.Field()
+    #源网站的名称
+    sourceSiteName=scrapy.Field()
+    #网页的tag
+    tag=scrapy.Field()
+
+    def printSelf(self):
+        print " _id is %s" %self['_id']
+        print "root_class is %s" %self['root_class']
+        print "channel is %s" %self['channel']
+
+        print "imgUrl is %s" %self['imgUrl']
+        print "updateTime is %s" %self['updateTime']
+        print "sourceSiteName is %s" %self['sourceSiteName']
+        print "description is %s" %self['description']
+        print "sourceUrl is %s" %self['sourceUrl']
+        print "tag is %s" %self['tag']
+
+
 class PicNewsItem(scrapy.Item):
     _id=scrapy.Field()
     title=scrapy.Field()

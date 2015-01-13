@@ -42,6 +42,7 @@ MONGODB_REPL='myset'
 
 MONGODB_DB = "news_ver2"
 MONGODB_COLLECTION = "newsItems"
+MONGODB_PARTIAL_ITEM_COLL="partialNewsItem"
 MONGODB_CRAWLED_COLLECTION="CrawledItems"
 
 # 设置middleware

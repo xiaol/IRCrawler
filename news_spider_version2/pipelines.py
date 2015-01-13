@@ -8,7 +8,7 @@ import pymongo
 from scrapy import log
 from scrapy.conf import settings
 from pymongo import ReadPreference
-from news_spider_version2.items import NewsItem
+from news_spider_version2.items import NewsItem, PartialNewsItem
 
 
 class NewsSpiderVersion2Pipeline(object):
@@ -20,6 +20,7 @@ class NewsSpiderVersion2Pipeline(object):
         db = connection[settings['MONGODB_DB']]
         self.collection = db[settings['MONGODB_COLLECTION']]
         self.scrappedColl=db[settings['MONGODB_CRAWLED_COLLECTION']]
+        self.partialColl=db[settings['MONGODB_PARTIAL_ITEM_COLL']]
 
     def process_item(self, item, spider):
         if type(item) is NewsItem:
@@ -29,8 +30,10 @@ class NewsSpiderVersion2Pipeline(object):
                     level=log.DEBUG, spider=spider)
                 return item
             self.collection.save(dict(item))
-
             self.scrappedColl.save(scrapedItem)
             log.msg("Item wrote to MongoDB database %s/%s" %(settings['MONGODB_DB'], settings['MONGODB_COLLECTION']),
                     level=log.DEBUG, spider=spider)
+        elif type(item) is PartialNewsItem:
+            self.partialColl.save(dict(item))
+
         return item
