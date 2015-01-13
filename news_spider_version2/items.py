@@ -39,6 +39,7 @@ class NewsItem(scrapy.Item):
 
     def printSelf(self):
         print " _id is %s" %self['_id']
+        print " title is %s" %self['title']
         print "root_class is %s" %self['root_class']
         print "channel is %s" %self['channel']
         print "content is %s" %self['content']

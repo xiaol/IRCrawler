@@ -21,7 +21,7 @@ class MissevanSpider(scrapy.Spider):
 
     # start_urls=['http://pansci.tw/archives/category/type/living']
 
-    # start_urls=['http://pansci.tw/archives/70656']
+    start_urls=['http://news.missevan.cn/news/article?newsid=23659']
 
     root_class='未知'
     #一级分类下面的频道
@@ -29,19 +29,21 @@ class MissevanSpider(scrapy.Spider):
      #源网站的名称
     sourceSiteName='M站'
 
-    page_url_pattern=re.compile(r'^http://pansci.tw/archives/\d+$')
+    page_url_pattern=re.compile(r'^http://news.missevan.cn/news/article\?newsid=\d+$')
 
-    total_pages_pattern=re.compile(r'<span class="page-ch">.*?(\d+).*?</span>')
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p>.*?</p>|<img(?: .*?)? src=".*?"(?: .*?)?>')
+    content_pat=re.compile(r'<p(?: .+?)?>.*?</p>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
     para_pat=re.compile(r'<p>(.+?)</p>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
+
+    unwanted_para_str="文："
+    base_url="http://news.missevan.cn"
 
     html_parser = HTMLParser.HTMLParser()
     # channel_map={'wtf':'冷新闻','WTF':'冷新闻','sex':'冷新闻','SEX':'冷新闻','爷有钱':'冷新闻',
@@ -54,9 +56,8 @@ class MissevanSpider(scrapy.Spider):
         if self.isPage(response,url):
             yield self.dealWithPage(response,url)
         else:
-            partialitems,results=self.dealWithNonPage(response,url)
-            for item in partialitems:
-                yield item
+            results=self.dealWithNonPage(response,url)
+
             for result in results:
                 yield(result)
 
@@ -75,13 +76,14 @@ class MissevanSpider(scrapy.Spider):
         item['root_class']=self.extractRootClass(response)
 
         item['updateTime']=self.extractTime(response)
-        # item['title']=self.extractTitle(response)
+        item['title']=self.extractTitle(response)
         item['content']=self.extractContent(response)
-        # item['imgUrl']=self.extractImgUrl(response)
+        item['imgUrl']=self.extractImgUrl(response)
         item['sourceUrl']=url
         item['sourceSiteName']=self.extractSourceSiteName(response)
         item['tag']=self.extractTag(response)
         item['channel']=self.extractChannel(response,item)
+        item['description']=self.extractDesc(response)
         item['_id']=self.generateItemId(item)
         dict_obj=MongoUtils.findPartialItemById(item['_id'])
         item.cloneInfoFromDict(dict_obj)
@@ -93,17 +95,13 @@ class MissevanSpider(scrapy.Spider):
     def generateItemId(self,item):
         return item['sourceUrl']
 
-    # def extractTitle(self,response):
-    #     title=response.xpath('//div[@class="post f"]/h1/a/text()').extract()[0]
-    #     return title
+    def extractTitle(self,response):
+        title=response.xpath('//div[@id="articletitle"]/text()').extract()[0]
+        return title
 
     def extractTime(self,response):
-        raw_time_str=response.xpath('//meta[@name=\'shareaholic:article_modified_time\']/@content').extract()[0]
+        raw_time_str=response.xpath('//div[@id="articleinfo"]/div[@class="newsinfo2"]/text()').extract()[0]
         time=raw_time_str
-        return self.formatTime(time)
-
-    def formatTime(self,timeStr):
-        time=timeStr.split('+')[0].strip().replace('T',' ')
         return time
 
     def extractRootClass(self,response):
@@ -113,46 +111,45 @@ class MissevanSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@class="pure_content"]').extract()[0]
-        return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
+        rawContent=response.xpath('//div[@id="article"]/div[@id="articlebox"]/div[@id="articlecontent"]').extract()[0]
+        rawContent=self.html_parser.unescape(rawContent)
+        return CrawlerUtils.extractContentDelUnwantedPat(rawContent,self.content_pat,self.img_pat,
+                                                         self.para_pat,self.unwanted_para_str)
 
 
-    # def extractImgUrl(self,response):
-    #     rawContent=response.xpath('//div[@class="post f"]').extract()
-    #     if not len(rawContent):
-    #         return None
-    #     for line in re.findall(self.content_pat,rawContent[0]):
-    #         imgSearch=re.search(self.img_pat,line)
-    #         if imgSearch:
-    #             return imgSearch.group(1)
-    #     return None
 
-    # def extractDesc(self,response):
-    #     return None
+
+    def extractImgUrl(self,response):
+        rawContent=response.xpath('////div[@id="article"]/div[@id="articlebox"]/div[@id="articlecontent"]').extract()
+        if not len(rawContent):
+            return None
+        for line in re.findall(self.content_pat,rawContent[0]):
+            imgSearch=re.search(self.img_pat,line)
+            if imgSearch:
+                return imgSearch.group(1)
+        return None
+
+    def extractDesc(self,response):
+        return None
 
     def extractSourceSiteName(self,response):
         return self.sourceSiteName
 
     #获取文章的tag信息
     def extractTag(self,response):
-        tag=response.xpath('//ul[@class="post-tags"]/li/a[@rel="tag"]/text()').extract()
+        tag=response.xpath('//*[@id="articleinfo"]/div[@class="newstags1"]/a/text()').extract()
         return tag
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
-        pages_arr=response.xpath('//div[@id="content_bg"]/div[@id="left"]/div[@class="list_category"]')
-        partial_page_items=[]
+        pages_arr=response.xpath('//*[@id="left"]/div[1]/div[1]/div[1]/a/@href').extract()
         request_items=[]
         for elem in pages_arr:
-            partial_item=self.generatePartialItem(elem)
-            if partial_item:
-                # partial_page_items.append(partial_item)
-                MongoUtils.savePartialItem(partial_item)
-                request_items.append(scrapy.Request(partial_item['sourceUrl'],callback=self.parse,dont_filter=False))
+            request_items.append(scrapy.Request(self.base_url+elem,callback=self.parse,dont_filter=False))
         prevoius_page_url=self.getPrevoiuPageUrl(response)
         if prevoius_page_url:
             request_items.append(scrapy.Request(prevoius_page_url,callback=self.parse,dont_filter=True))
-        return partial_page_items,request_items
+        return request_items
 
     def generatePartialItem(self,dom_elem):
         partial_item=PartialNewsItem()
@@ -170,17 +167,12 @@ class MissevanSpider(scrapy.Spider):
 
      #获取前面一页的url
     def getPrevoiuPageUrl(self,response):
-        previousUrlsPath=response.xpath('//div[@class="pagging"]/div[@class="pagging_inside"]').extract()
+        previousUrlsPath=response.xpath('//*[@id="newslink"]/li[@class="next"]/a/@href').extract()
         if len(previousUrlsPath):
             html_parser=HTMLParser.HTMLParser()
             page_url_str=html_parser.unescape(previousUrlsPath[0])
-
-            search_result=re.search(self.previous_page_pat,page_url_str)
-            if search_result:
-                return search_result.group(1)
+            return self.base_url+page_url_str
         return None
-
-
 
     def main(self,url):
        urlStr=self.getHtmlContentUnicode(url)

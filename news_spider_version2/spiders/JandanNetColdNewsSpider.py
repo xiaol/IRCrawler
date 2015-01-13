@@ -16,12 +16,12 @@ class JandanColdNewsSpider(scrapy.Spider):
     name='JandanCodeNews'
     allowed_domains=['jandan.net']
 
-    start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
-                'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
-                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
+    # start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
+    #             'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
+    #             'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
-    # start_urls=['http://jandan.net/tag/%E7%AC%A8%E8%B4%BC']
-
+    start_urls=['http://jandan.net/tag/%E7%AC%A8%E8%B4%BC']
+    #
     # start_urls=['http://jandan.net/2014/11/16/we-won-lottery.html']
 
     root_class='0度'

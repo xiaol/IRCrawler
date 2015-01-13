@@ -23,7 +23,7 @@ class PansciColdSpider(scrapy.Spider):
 
     # start_urls=['http://pansci.tw/archives/category/type/living']
 
-    # start_urls=['http://pansci.tw/archives/70656']
+    start_urls=['http://pansci.tw/archives/70656']
 
     root_class='0度'
     #一级分类下面的频道

@@ -406,7 +406,7 @@ class CrawlerUtils:
                     img_text_elem.append(elem)
                     imgBefore=True
         if imgBefore & len(img_text_elem):
-            img_text_infos.append(img_text_infos)
+            img_text_infos.append(img_text_elem)
         return img_text_infos
 
     @classmethod
@@ -433,7 +433,7 @@ class CrawlerUtils:
             imgSearch=re.search(img_pat,line)
             if imgSearch:
                 listInfos.append({'img':imgSearch.group(1)})
-                # print "img is %s" %imgSearch.group(1)
+                print "img is %s" %imgSearch.group(1)
             else:
                 txtSearch=re.search(para_pat,line)
                 if txtSearch:
@@ -443,6 +443,31 @@ class CrawlerUtils:
                     result=CrawlerUtils.removeUnwantedTag(result)
                     if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                        # print "txt is :%s" %result
+                        print "txt is :%s" %result
+                        listInfos.append({'txt':result})
+        return CrawlerUtils.make_img_text_pair(listInfos)
+
+    @classmethod
+    def extractContentDelUnwantedPat(cls,rawContent,content_pat,img_pat,para_pat,unwanted_pat):
+        listInfos=[]
+
+        for line in re.findall(content_pat,rawContent):
+            imgSearch=re.search(img_pat,line)
+            if imgSearch:
+                listInfos.append({'img':imgSearch.group(1)})
+                print "img is %s" %imgSearch.group(1)
+            else:
+                txtSearch=re.search(para_pat,line)
+                if txtSearch:
+                    result=txtSearch.group(1)
+                    result=CrawlerUtils.removeParasedCode(result)
+                    result=CrawlerUtils.removeScript(result)
+                    result=CrawlerUtils.removeUnwantedTag(result)
+                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+                        result=result.strip()
+                        if result.startswith(unwanted_pat):
+                            continue
+                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result+'\n\n'
+                        print "txt is :%s" %result
                         listInfos.append({'txt':result})
         return CrawlerUtils.make_img_text_pair(listInfos)
