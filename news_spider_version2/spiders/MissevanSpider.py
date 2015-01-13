@@ -21,7 +21,7 @@ class MissevanSpider(scrapy.Spider):
 
     # start_urls=['http://pansci.tw/archives/category/type/living']
 
-    start_urls=['http://news.missevan.cn/news/article?newsid=23659']
+    # start_urls=['http://news.missevan.cn/news/article?newsid=23659']
 
     root_class='未知'
     #一级分类下面的频道
@@ -85,8 +85,6 @@ class MissevanSpider(scrapy.Spider):
         item['channel']=self.extractChannel(response,item)
         item['description']=self.extractDesc(response)
         item['_id']=self.generateItemId(item)
-        dict_obj=MongoUtils.findPartialItemById(item['_id'])
-        item.cloneInfoFromDict(dict_obj)
 
         item.printSelf()
         return item
