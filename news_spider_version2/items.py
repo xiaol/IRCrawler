@@ -51,7 +51,7 @@ class NewsItem(scrapy.Item):
         print "tag is %s" %self['tag']
 
     def cloneInfoFromDict(self,dict_obj):
-        keys=['root_class','channel','content','imgUrl',
+        keys=['title','root_class','channel','content','imgUrl',
               'updateTime','sourceSiteName','description','sourceUrl','tag']
         if dict_obj==None:
             return
@@ -124,3 +124,53 @@ class DetailContentItem(scrapy.Item):
     def printItem(self):
         print "_id is %s" %self['_id']
         print "content is %s" %self['content']
+
+
+class NewsProductItem(scrapy.Item):
+    # item 的唯一标识 用源网址
+    _id=scrapy.Field()
+    #r_id
+    root_class=scrapy.Field()
+    #r_name
+    root_name=scrapy.Field()
+    #ch_id
+    channel=scrapy.Field()
+    #ch_name
+    channel_name=scrapy.Field()
+
+    title=scrapy.Field()
+    content=scrapy.Field()
+
+     #item 的缩略图
+    imgUrl=scrapy.Field()
+    #item 生成的时间
+    updateTime=scrapy.Field()
+    #item 的描述
+    description=scrapy.Field()
+    sourceUrl=scrapy.Field()
+    #源网站的名称
+    sourceSiteName=scrapy.Field()
+    #网页的tag
+    tag=scrapy.Field()
+
+    def printSelf(self):
+        print " _id is %s" %self['_id']
+        print " title is %s" %self['title']
+        print "root_class is %s" %self['root_class']
+        print "channel is %s" %self['channel']
+        print "content is %s" %self['content']
+        print "imgUrl is %s" %self['imgUrl']
+        print "updateTime is %s" %self['updateTime']
+        print "sourceSiteName is %s" %self['sourceSiteName']
+        print "description is %s" %self['description']
+        print "sourceUrl is %s" %self['sourceUrl']
+        print "tag is %s" %self['tag']
+
+    def cloneInfoFromDict(self,dict_obj):
+        keys=['_id','title','content','imgUrl','updateTime',
+              'sourceSiteName','description','sourceUrl','tag']
+        if dict_obj==None:
+            return
+        for key in keys:
+            if key in dict_obj:
+                self[key]=dict_obj[key]

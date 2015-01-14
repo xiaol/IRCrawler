@@ -140,9 +140,10 @@ class MissevanSpider(scrapy.Spider):
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
-        pages_arr=response.xpath('//*[@id="left"]/div[1]/div[1]/div[1]/a/@href').extract()
+        pages_arr=response.xpath('//*[@id="left"]/div[@class="newslist"]/div[1]/div[1]/a/@href').extract()
         request_items=[]
         for elem in pages_arr:
+            print "getting the next url is %s "%(self.base_url+elem)
             request_items.append(scrapy.Request(self.base_url+elem,callback=self.parse,dont_filter=False))
         prevoius_page_url=self.getPrevoiuPageUrl(response)
         if prevoius_page_url:

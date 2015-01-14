@@ -8,7 +8,8 @@ import pymongo
 from scrapy import log
 from scrapy.conf import settings
 from pymongo import ReadPreference
-from news_spider_version2.items import NewsItem, PartialNewsItem
+from news_spider_version2.items import NewsItem, PartialNewsItem, NewsProductItem
+from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
 
 
 class NewsSpiderVersion2Pipeline(object):
@@ -21,18 +22,32 @@ class NewsSpiderVersion2Pipeline(object):
         self.collection = db[settings['MONGODB_COLLECTION']]
         self.scrappedColl=db[settings['MONGODB_CRAWLED_COLLECTION']]
         self.partialColl=db[settings['MONGODB_PARTIAL_ITEM_COLL']]
+        self.product_collection=db[settings['MONGODB_PRODUCT_COLLECTION']]
 
     def process_item(self, item, spider):
         if type(item) is NewsItem:
             scrapedItem={'_id':item['_id']}
-            if self.scrappedColl.find_one(scrapedItem):
-                log.msg("Item %s alread exists in  database " %(item['_id']),
-                    level=log.DEBUG, spider=spider)
-                return item
-            self.collection.save(dict(item))
+            # if self.scrappedColl.find_one(scrapedItem):
+            #     log.msg("Item %s alread exists in  database " %(item['_id']),
+            #         level=log.DEBUG, spider=spider)
+            #     return item
+            item_dict=dict(item)
+            self.collection.save(item_dict)
             self.scrappedColl.save(scrapedItem)
             log.msg("Item wrote to MongoDB database %s/%s" %(settings['MONGODB_DB'], settings['MONGODB_COLLECTION']),
                     level=log.DEBUG, spider=spider)
+
+            #save the item to product collection
+            product_item=NewsProductItem()
+            product_item.cloneInfoFromDict(item_dict)
+            rid,r_name,cid,c_name=MongoUtils.findRootInfo(item_dict['root_class'],item_dict['channel'])
+            product_item['root_class']=rid
+            product_item['root_name']=r_name
+            product_item['channel']=cid
+            product_item['channel_name']=c_name
+            self.product_collection.save(dict(product_item))
+
+
         elif type(item) is PartialNewsItem:
             self.partialColl.save(dict(item))
 
