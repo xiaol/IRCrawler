@@ -73,6 +73,6 @@ class MongoUtils:
             i=i+1
 
 if __name__=='__main__':
-    MongoUtils.makeRootInfoTable()
-
+    # MongoUtils.makeRootInfoTable()
+    print 'Hello world'
 
