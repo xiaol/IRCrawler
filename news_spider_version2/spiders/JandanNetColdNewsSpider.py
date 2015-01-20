@@ -46,9 +46,10 @@ class JandanColdNewsSpider(scrapy.Spider):
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
 
+
     html_parser = HTMLParser.HTMLParser()
     channel_map={'wtf':'冷新闻','WTF':'冷新闻','sex':'冷新闻','SEX':'冷新闻','爷有钱':'冷新闻',
-       'diy':'冷知识','DIY':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识',
+       'diy':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识',
         '笨贼':'冷幽默','熊孩子':'冷幽默'
     }
 
@@ -218,15 +219,14 @@ class JandanColdNewsSpider(scrapy.Spider):
     #     return None
 
 
-    # #提取当前页面的文件夹路径
-    # def extractBaseUrl(self,url):
-    #     if None==url:
-    #         return None
-    #     index=url.rfind("/")
-    #     return url[:index+1]
-
-
-
+    #提取当前页面的文件夹路径
+    def extractBaseUrl(self,url):
+        if None==url:
+            return None
+        matchResult=re.match(self.base_url_pat,url)
+        if matchResult:
+            return matchResult.group(1)
+        return None
 
     def main(self,url):
        urlStr=self.getHtmlContentUnicode(url)
