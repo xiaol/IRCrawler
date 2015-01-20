@@ -14,31 +14,31 @@ import HTMLParser
 class LensSubzeroSpider(scrapy.Spider):
     name='NeteaseColdNews'
 
-    allowed_domains=['zhenhua.163.com']
+    allowed_domains=['news.163.com']
 
     start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
                 'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
-    start_urls=['http://zhenhua.163.com/special/2013headlinenews']
+    start_urls=['http://news.163.com/special/coldnews13']
 
-    # start_urls=['http://zhenhua.163.com/14/0110/11/9I7MHPE5000464BM.html']
+    # start_urls=['http://news.163.com/special/coldnewsltk']
 
     root_class='-40度'
     #一级分类下面的频道
     default_channel='冰封'
      #源网站的名称
-    sourceSiteName='NeteaseYearEnd'
+    sourceSiteName='NeteaseCold'
 
 
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-    page_url_pattern=re.compile(r'^http://world\.yam\.com/post\.php\?id=\d+?$')
+    page_url_pattern=re.compile(r'^http://news\.163\.com/special/coldnews\D+$')
 
     total_pages_pattern=re.compile(r'<span class="page-ch">.*?(\d+).*?</span>')
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
 
-    title_pat1=re.compile(r'<h3 class="title">(.+?)</h3>')
+    title_pat1=re.compile(r'<h3 class="sc-title">(.+?)</h3>')
     title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
@@ -47,12 +47,17 @@ class LensSubzeroSpider(scrapy.Spider):
     digital_pat=re.compile(r'\d+')
 
     content_pat=re.compile(r'<p>.*?</p>|<img.*?>',re.DOTALL)
-
+    content_pat1=re.compile(r'<img\s*?src=".*?"\s*?alt=".*?".*?>')
+    content_pat2=re.compile(r'<img\s*?src="(.*?)"\s*?alt="(.*?)".*?>')
     img_pat=re.compile(r'<img\s*?alt=".*?"\s*?src="(.*?)">')
     para_pat=re.compile(r'<p>(.*?)</p>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
-    nonpage_url_pat=re.compile(r'<a class="intro"\s*?href="(post.php\?id=\d*?)">')
+    nonpage_url_pat=re.compile(r'<a.*?helink="(.*?)"\s*?hetext="\S+".*?hepos="left">')
+
+    nonpage_url_pat_1=re.compile(r'<a.*?helink=".*?"\s*?hetext="\S+".*?hepos="left">')
+    # <a class="sc-cur" href="javascript:;" target="_self" pltype="6" topicid="0001" sid="V9G6428S1" vid="V9GDRSQ3T" coverpic="http://img6.cache.netease.com/cnews/2013/12/30/20131230002308ee611.png" mpfour="http://flv.bn.netease.com/videolib3/1312/30/rLCZc2935/HD/rLCZc2935-mobile.mp4" hename="李侗奎" helink="http://news.163.com/special/coldnewsltk/" hetext="失独者：无法承受的余生>>" helife="他19岁结婚，婚后有了儿子李征。因当时计划生育政策抓的紧，考虑到生下的孩子又是男孩，可以传宗接代，他没有选择再生。后来儿子因病去世，他成为了失独者。时至今日，他仍然无法从丧子之痛中走出来。他说，不久的将来爸爸也会找你的。" hepos="left">
+
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
     end_content_str='以上图文只是杂志上很小的一部分……'
 
@@ -78,7 +83,7 @@ class LensSubzeroSpider(scrapy.Spider):
     def isPage(self,response,url):
         if None==url:
             return False
-        if url.endswith(".html"):
+        if re.match(self.page_url_pattern,url):
             return True
         return False
 
@@ -109,8 +114,8 @@ class LensSubzeroSpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-
-        raw_title_str=response.xpath('//div[@class="article-image"]/div[@class="image-box"]').extract()[0]
+        print "hello"
+        raw_title_str=response.xpath('//div[@class="sc-gray"]/div[@class="sc-area"]').extract()[1]
         # raw_title_str=response.xpath('//div[@class="headerBar"]').extract()[0]
         searchResult1=re.search(self.title_pat1,raw_title_str)
 
@@ -155,21 +160,47 @@ class LensSubzeroSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@class="content"]').extract()
-        if not len(rawContent):
+
+        rawContent1=response.xpath('//div[@class="sc-gray"]/div[@class="sc-area"]/div[@class="nz-slider"]/div[@class="nz-sl-content"]/div[@class="nz-sl-scroll"]').extract()
+
+        if not len(rawContent1):
             return None
         listInfos=[]
+        find_result1=re.findall(self.content_pat1,rawContent1[0])
+        # print "find_result %s" %find_result[0][0]
 
-        find_result=re.findall(self.content_pat,rawContent[0])
-        # print "rawcontent %s" %find_result
-        for line in find_result:
-            # print "line,%s"%line
-            imgSearch=re.search(self.img_pat,line)
+        for line in find_result1:
+            print "line,%s"%line
+            imgSearch=re.search(self.content_pat2,line)
             if imgSearch:
                 listInfos.append({'img':imgSearch.group(1)})
-                # print "img is %s" %imgSearch.group(1)
+                print "img is %s" %imgSearch.group(1)
+
+            txtSearch=re.search(self.content_pat2,line)
+            if txtSearch:
+                result=txtSearch.group(2)
+                result=CrawlerUtils.removeParasedCode(result)
+                result=CrawlerUtils.removeScript(result)
+                result=CrawlerUtils.removeUnwantedTag(result)
+                if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+                    result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+                    if self.end_content_str in result:
+                        break
+                    print "txt is :%s" %result
+                    listInfos.append({'txt':result})
+                    # print  "listInfos,%s" %listInfos
+
+        rawContent2=response.xpath('//div[@class="sc-gray"]/div[@class="sc-area"]/div[@class="sc-detail"]').extract() #/div[@class="sc-init"]/div[@class="sc-exp"]
+        find_result2=re.findall(self.content_pat,rawContent2[0])
+        # print "rawcontent %s" %find_result
+        for line2 in find_result2:
+            print "line2,%s"%line2
+            imgSearch=re.search(self.img_pat,line2)
+            if imgSearch:
+                listInfos.append({'img':imgSearch.group(1)})
+                print "img is %s" %imgSearch.group(1)
             else:
-                txtSearch=re.search(self.para_pat,line)
+                txtSearch=re.search(self.para_pat,line2)
                 if txtSearch:
                     result=txtSearch.group(1)
                     result=CrawlerUtils.removeParasedCode(result)
@@ -179,19 +210,21 @@ class LensSubzeroSpider(scrapy.Spider):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
                         if self.end_content_str in result:
                             break
-                        # print "txt is :%s" %result
+                        print "txt is :%s" %result
                         listInfos.append({'txt':result})
         # print  "listInfos,%s" %listInfos
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
-        rawContent=response.xpath('//div[@class="content"]').extract()
+
+        rawContent=response.xpath('//div[@class="sc-gray"]/div[@class="sc-area"]/div[@class="nz-slider"]/div[@class="nz-sl-content"]/div[@class="nz-sl-scroll"]').extract()
         if not len(rawContent):
             return None
-        for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.img_pat,line)
+        for line in re.findall(self.content_pat1,rawContent[0]):
+            imgSearch=re.search(self.content_pat2,line)
+            print "imgsearch,%s"%imgSearch
             if imgSearch:
-                # print "imgsearch,%s" %imgSearch.group(1)
+                print "imgsearch,%s" %imgSearch.group(1)
                 return imgSearch.group(1)
         return None
 
@@ -212,11 +245,17 @@ class LensSubzeroSpider(scrapy.Spider):
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
 
-        pages_arr=response.xpath('//div[@class="sc-train"]/div/div[@class="sc-ticy"]/a/@href').extract()  #/li[@class="box masonry-brick"
+        pages_arr=response.xpath('//div[@class="sc-nav"]').extract()[0]  #/li[@class="box masonry-brick"
+        pages_result=re.findall(self.nonpage_url_pat_1,pages_arr)
         results=[]
-        for new_page_url in pages_arr:
+        # print "pages_result,%s" %pages_result
+        for new_page_url in pages_result:
+            # print "new_page_url,%s"%new_page_url
             if new_page_url:
-                results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
+                new_page_url_1=re.search(self.nonpage_url_pat,new_page_url)
+                new_page_url2=new_page_url_1.group(1)
+                # print "new_page_url2,%s"%new_page_url2
+                results.append(scrapy.Request(new_page_url2,callback=self.parse,dont_filter=False))
         # prevoius_page_url=self.getPrevoiuPageUrl(response)
         # if prevoius_page_url:
         #     results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=True))

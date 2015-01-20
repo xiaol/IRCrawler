@@ -12,23 +12,23 @@ import HTMLParser
 
 
 class LensSubzeroSpider(scrapy.Spider):
-    name='NeteaseYearEndNews'
+    name='EarthAtlasNews'
 
-    allowed_domains=['zhenhua.163.com']
+    allowed_domains=['world.yam.com']
 
     start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
                 'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
-    start_urls=['http://zhenhua.163.com/special/2013headlinenews']
+    start_urls=['http://world.yam.com']
 
-    # start_urls=['http://zhenhua.163.com/14/0110/11/9I7MHPE5000464BM.html']
+    # start_urls=['http://world.yam.com/post.php?id=3182']
 
-    root_class='-40度'
+    root_class='40度'
     #一级分类下面的频道
-    default_channel='冰封'
+    default_channel='最热门'
      #源网站的名称
-    sourceSiteName='NeteaseYearEnd'
+    sourceSiteName='EarthAtlas'
 
 
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -38,7 +38,7 @@ class LensSubzeroSpider(scrapy.Spider):
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
 
-    title_pat1=re.compile(r'<h3 class="title">(.+?)</h3>')
+    title_pat1=re.compile(r'<h2>(.+?)</h2>')
     title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
@@ -48,7 +48,7 @@ class LensSubzeroSpider(scrapy.Spider):
 
     content_pat=re.compile(r'<p>.*?</p>|<img.*?>',re.DOTALL)
 
-    img_pat=re.compile(r'<img\s*?alt=".*?"\s*?src="(.*?)">')
+    img_pat=re.compile(r'<img\s*?class=".*?"\s*?src="(.*?)"\s*?data-original=".*?"\s*?alt=".*?">')
     para_pat=re.compile(r'<p>(.*?)</p>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
@@ -78,10 +78,9 @@ class LensSubzeroSpider(scrapy.Spider):
     def isPage(self,response,url):
         if None==url:
             return False
-        if url.endswith(".html"):
+        if re.match(self.page_url_pattern,url):
             return True
         return False
-
 
 
 
@@ -110,7 +109,7 @@ class LensSubzeroSpider(scrapy.Spider):
 
     def extractTitle(self,response):
 
-        raw_title_str=response.xpath('//div[@class="article-image"]/div[@class="image-box"]').extract()[0]
+        raw_title_str=response.xpath('//article[@class="mainBox xxx"]/header').extract()[0]
         # raw_title_str=response.xpath('//div[@class="headerBar"]').extract()[0]
         searchResult1=re.search(self.title_pat1,raw_title_str)
 
@@ -121,7 +120,11 @@ class LensSubzeroSpider(scrapy.Spider):
         return None
 
     def extractTime(self,response):
-
+        raw_time_str=response.xpath('//div[@class="headerBar"]').extract()[0]
+        searchResult=re.search(self.time_pat,raw_time_str)
+        if searchResult:
+            time=searchResult.group(1)
+            return self.formatTime(time)
         return CrawlerUtils.getDefaultTimeStr()
      # 2015-01-07 11:50:09
     def formatTime(self,timeStr):
@@ -155,7 +158,7 @@ class LensSubzeroSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@class="content"]').extract()
+        rawContent=response.xpath('//article[@class="mainBox xxx"]').extract()
         if not len(rawContent):
             return None
         listInfos=[]
@@ -179,13 +182,13 @@ class LensSubzeroSpider(scrapy.Spider):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
                         if self.end_content_str in result:
                             break
-                        # print "txt is :%s" %result
+                        print "txt is :%s" %result
                         listInfos.append({'txt':result})
         # print  "listInfos,%s" %listInfos
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
-        rawContent=response.xpath('//div[@class="content"]').extract()
+        rawContent=response.xpath('//article[@class="mainBox xxx"]').extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
@@ -211,11 +214,13 @@ class LensSubzeroSpider(scrapy.Spider):
 
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
-
-        pages_arr=response.xpath('//div[@class="sc-train"]/div/div[@class="sc-ticy"]/a/@href').extract()  #/li[@class="box masonry-brick"
+        # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
+        pages_arr=response.xpath('//article[@id="toperContainer"]/section').extract()  #/li[@class="box masonry-brick"
         results=[]
-        for new_page_url in pages_arr:
-            if new_page_url:
+        for new_page_url_raw in pages_arr:
+            searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
+            if searchResult:
+                new_page_url="http://world.yam.com/"+searchResult.group(1)
                 results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
         # prevoius_page_url=self.getPrevoiuPageUrl(response)
         # if prevoius_page_url:
