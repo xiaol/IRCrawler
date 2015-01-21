@@ -21,7 +21,13 @@ class MissevanSpider(scrapy.Spider):
 
     # start_urls=['http://pansci.tw/archives/category/type/living']
 
-    # start_urls=['http://news.missevan.cn/news/article?newsid=23659']
+    # start_urls=['http://news.missevan.cn/news/article?newsid=23237','http://news.missevan.cn/news/article?newsid=23213',
+    #             'http://news.missevan.cn/news/article?newsid=23275','http://news.missevan.cn/news/article?newsid=23275',
+    #             'http://news.missevan.cn/news/article?newsid=23262','http://news.missevan.cn/news/article?newsid=23208',
+    #             'http://news.missevan.cn/news/article?newsid=23188','http://news.missevan.cn/news/article?newsid=23178',
+    #             'http://news.missevan.cn/news/article?newsid=23174','http://news.missevan.cn/news/article?newsid=23238',
+    #             'http://news.missevan.cn/news/article?newsid=23216','http://news.missevan.cn/news/article?newsid=23214',
+    #             ]
 
     root_class='未知'
     #一级分类下面的频道
@@ -33,12 +39,13 @@ class MissevanSpider(scrapy.Spider):
 
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
-    time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
+    time_pat=re.compile(r'<div class="newsinfo2">([\d\-\s:]+)</div>')
+
     digital_pat=re.compile(r'\d+')
 
     content_pat=re.compile(r'<p(?: .+?)?>.*?</p>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'<p>(.+?)</p>')
+    para_pat=re.compile(r'<p(?: .+?)?>(.*?)</p>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
@@ -46,10 +53,6 @@ class MissevanSpider(scrapy.Spider):
     base_url="http://news.missevan.cn"
 
     html_parser = HTMLParser.HTMLParser()
-    # channel_map={'wtf':'冷新闻','WTF':'冷新闻','sex':'冷新闻','SEX':'冷新闻','爷有钱':'冷新闻',
-    #    'diy':'冷知识','DIY':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识',
-    #     '笨贼':'冷幽默','熊孩子':'冷幽默'
-    # }
 
     def parse(self,response):
         url=response._get_url()
@@ -98,8 +101,10 @@ class MissevanSpider(scrapy.Spider):
         return title
 
     def extractTime(self,response):
-        raw_time_str=response.xpath('//div[@id="articleinfo"]/div[@class="newsinfo2"]/text()').extract()[0]
-        time=raw_time_str
+        raw_time_str=response.xpath('//div[@id="articleinfo"]').extract()[0]
+        searchResult=re.search(self.time_pat,raw_time_str)
+        if searchResult:
+            time=searchResult.group(1)
         return time
 
     def extractRootClass(self,response):
@@ -172,13 +177,3 @@ class MissevanSpider(scrapy.Spider):
             page_url_str=html_parser.unescape(previousUrlsPath[0])
             return self.base_url+page_url_str
         return None
-
-    def main(self,url):
-       urlStr=self.getHtmlContentUnicode(url)
-       print urlStr
-
-if __name__=='__main__':
-    some_interface='http://jandan.duoshuo.com/api/threads/listPosts.json?thread_key=comment-2650694&url=http%3A%2F%2Fjandan.net%2Fooxx%2Fpage-1301%26yid%3Dcomment-2650694&image=http%3A%2F%2Fww1.sinaimg.cn%2Fmw600%2Fa00dfa2agw1enxg54qbbfj20n40x6755.jpg&require=site%2Cvisitor%2Cnonce%2CserverTime%2Clang&site_ims=1420356603&lang_ims=1420356603&v=140327'
-    print "the interface is %s"%some_interface
-    html_parser=HTMLParser.HTMLParser()
-    print "the unscaped is %s " %html_parser.unescape(some_interface)
