@@ -7,6 +7,7 @@ __author__ = 'galois'
 import re
 import datetime
 import sys
+import HTMLParser
 
 class CrawlerUtils:
     reload(sys) # Python2.5 初始化后会删除 sys.setdefaultencoding 这个方法，我们需要重新载入
@@ -37,6 +38,7 @@ class CrawlerUtils:
     parasedPat=re.compile(r'<!--(.*?)-->',re.DOTALL)
 
     urlPattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+    html_parser = HTMLParser.HTMLParser()
 
 
     category_map={'news':'新闻', '资讯':'新闻',\
@@ -182,33 +184,6 @@ class CrawlerUtils:
             timeList.append('0')
         timeList.append(second)
         return ''.join(timeList)
-
-
-    # @classmethod
-    # def extractTag(cls,content):
-    #     resultlist=[]
-    #     tempResult=[]
-    #     bufferMode=False
-    #     for c in content:
-    #         if bufferMode:
-    #             tempResult.append(c)
-    #             if(c=='>'):
-    #                 bufferMode=False
-    #                 tempStr="".join(tempResult)
-    #                 if not isDelete(tempStr):
-    #                     resultlist.append(tempStr)
-    #                 tempResult=[]
-    #         else:
-    #             if(c=='<'):
-    #                 bufferMode=True
-    #                 tempResult.append(c)
-    #             else:
-    #                 resultlist.append(c)
-    #
-    #     resultStr= "".join(resultlist).strip()
-    #     print 'resultStr is %s ' %resultStr
-    #
-    #     return "".join(resultlist)
 
     """
     根据tag来确定替换的字符比 <p .*?> 该替换为‘\t'
@@ -435,6 +410,7 @@ class CrawlerUtils:
                 listInfos.append({'img':imgSearch.group(1)})
                 print "img is %s" %imgSearch.group(1)
             else:
+                line=cls.html_parser.unescape(line)
                 txtSearch=re.search(para_pat,line)
                 if txtSearch:
                     result=txtSearch.group(1)
@@ -457,6 +433,7 @@ class CrawlerUtils:
                 listInfos.append({'img':imgSearch.group(1)})
                 print "img is %s" %imgSearch.group(1)
             else:
+                line=cls.html_parser.unescape(line)
                 txtSearch=re.search(para_pat,line)
                 if txtSearch:
                     result=txtSearch.group(1)
