@@ -66,7 +66,7 @@ class CriSpider(scrapy.Spider):
     }
 
     def parse(self,response):
-  
+
 
         url=response._get_url()
         if self.isPage(response,url):

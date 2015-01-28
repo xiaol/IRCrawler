@@ -12,9 +12,9 @@ import time
 import HTMLParser
 
 
-class TvFantasySpider(scrapy.Spider):
-    name='TvFantasyNews'
-    allowed_domains=['tvfantasy.net']
+class TtPetSpider(scrapy.Spider):
+    name='TtPetNews'
+    allowed_domains=['ttpet.com']
 
     start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
@@ -23,19 +23,21 @@ class TvFantasySpider(scrapy.Spider):
 
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
-    start_urls=['http://tvfantasy.net/']
-    # start_urls=['http://tvfantasy.net/2015/01/25/mini-series-sons-of-liberty-premiere/']
+    start_urls=['http://www.ttpet.com/zixun/39/category-catid-39.html']
+    # start_urls=['http://www.ttpet.com/zixun/71/n-90171.html']
+    # start_urls=['http://www.ttpet.com/zixun/07/n-90107.html']
 
 
-    root_class='40度'
+
+    root_class='36度'
     #一级分类下面的频道
-    default_channel='热播剧'
+    default_channel='暖心'
      #源网站的名称
-    sourceSiteName='TvFantasy'
+    sourceSiteName='ttpet'
 
     channel_pat=re.compile(r'http://www.qianzhan.com/ent/detail/325/.*?')
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-    page_url_pattern=re.compile(r'^http://tvfantasy\.net/\d+?/.*?$')
+    page_url_pattern=re.compile(r'^http://www\.ttpet\.com/zixun/\d+?/n.*?$')
 
     total_pages_pattern=re.compile(r'<span class="page-ch">.*?(\d+).*?</span>')
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
@@ -45,17 +47,17 @@ class TvFantasySpider(scrapy.Spider):
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
 
-    time_pat=re.compile(r'<span style="letter-spacing:0;">(.*?)</span>',re.DOTALL)
+    time_pat=re.compile(r'<span>(.*?)</span>')
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p.*?</p>',re.DOTALL)
-    img_pat=re.compile(r'<img.*?src="(.*?)">')
-    para_pat=re.compile(r'<p.*?>(.*?)</p>',re.DOTALL)
+    content_pat=re.compile(r'<p.*?</p>|<div class="p_text">.*?<br>\s*?<p>|<img.*?src=".*?" alt="">',re.DOTALL)
+    img_pat=re.compile(r'<img.*?src="(.*?)" alt="">')
+    para_pat=re.compile(r'<p.*?>(.*?)</p>|<div class="p_text">(.*?)<br>\s*?<p>',re.DOTALL)
 
-    previous_page_pat=re.compile(r'<a\s*?href="(http://tvfantasy.net/[^>^<]*?)" class="emm-next">\\xbb</a>')
-    nonpage_url_pat=re.compile(r'<a class="trueblack" href="(http://tvfantasy.net/\d+/.*?)" .*?rel="bookmark">')
+    previous_page_pat=re.compile(r'<a\s*?href="([^>^<]*?)" title="([^<^>]*?) class="next">')
+    nonpage_url_pat=re.compile(r'<a\s*?href="([^<^>]*?\.html)"\s*?target="_blank"\s*?title=".*?">\\n<img')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
-    end_content_str='文章标签'
+    end_content_str='更多活动现场照片'
 
 
     # http://tu.duowan.com/g/01/82/e7.html
@@ -109,13 +111,15 @@ class TvFantasySpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        raw_title_str=response.xpath('//div[@id="single_content"]').extract()[0]
+        raw_title_str=response.xpath('//div[@class="p_pad"]').extract()[0]
         searchResult1=re.search(self.title_pat1,raw_title_str)
         # searchResult2=re.search(self.title_pat2,raw_title_str)
         # title=searchResult1+searchResult2
         if searchResult1:
             title=searchResult1.group(1)
             # title=searchResult1.group(1)
+
+
             title=CrawlerUtils.removeUnwantedTag(title)
 
             return title
@@ -123,7 +127,7 @@ class TvFantasySpider(scrapy.Spider):
 
     def extractTime(self,response):
 
-        raw_time_str=response.xpath('//div[@class="single_content_inner"]').extract()
+        raw_time_str=response.xpath('//div[@class="fmtime"]').extract()
         print "raw,%s"%raw_time_str
         searchResult=re.search(self.time_pat,str(raw_time_str))
         if searchResult:
@@ -151,8 +155,8 @@ class TvFantasySpider(scrapy.Spider):
             elif i<5:
                 resultArr.append(':')
             i=i+1
-        second=CrawlerUtils.getDefaultTimeStr().split(':')[-1]
-        resultArr.append(second)
+        # second=CrawlerUtils.getDefaultTimeStr().split(':')[-1]
+        # resultArr.append(second)
         return ''.join(resultArr)
 
     def extractRootClass(self,response):
@@ -170,7 +174,7 @@ class TvFantasySpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@class="entry_main"]').extract()[0]
+        rawContent=response.xpath('//div[@class="p_text"]').extract()[0]
         if not len(rawContent):
             return None
         listInfos=[]
@@ -204,7 +208,7 @@ class TvFantasySpider(scrapy.Spider):
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
-        rawContent=response.xpath('//div[@class="entry_main"]').extract()
+        rawContent=response.xpath('//div[@class="p_text"]').extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
@@ -228,7 +232,7 @@ class TvFantasySpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
-        tag=response.xpath('//div[@class="entry_main"]/p[@style="text-align:left;line-height:16px !important;font-size:12px;font-family:Verdana;margin:50px 0 30px 0;"]/a/text()').extract()
+        tag=response.xpath('//div[@class="gybq"]/a/text()').extract()
         print "tag,%s"%tag
         if tag:
             return tag
@@ -239,15 +243,17 @@ class TvFantasySpider(scrapy.Spider):
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
         # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
-        pages_arr=response.xpath('//div[@style="float:left;width:690px; background-color:#E8E8E8; height:auto; margin-top:10px;"]').extract()  #/li[@class="box masonry-brick"
+        pages_arr=response.xpath('//div[@class="p_pad"]').extract()  #/li[@class="box masonry-brick"
         find_result=re.findall(self.nonpage_url_pat,str(pages_arr))
         print "pages_arr,%s" %pages_arr
         results=[]
+        # start_urls=['http://www.ttpet.com/zixun/71/n-90171.html']
+
 
         for new_page_url_raw in find_result:
             # searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
             if new_page_url_raw:
-                new_page_url=new_page_url_raw    #.group(1)
+                new_page_url="http://www.ttpet.com"+new_page_url_raw    #.group(1)
                 print "new_page_url is %s" %new_page_url
 
                 results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
@@ -270,7 +276,7 @@ class TvFantasySpider(scrapy.Spider):
      #获取前面一页的url
     def getPrevoiuPageUrl(self,response):
         title_sign=u'下一页'
-        xpath_str='//div[@class="emm-paginate"]'.decode('utf8')
+        xpath_str='//div[@class="wo_page"]'.decode('utf8')
         previousUrlsPath=response.xpath(xpath_str).extract()
         print "previousUrlsPath,%s"%previousUrlsPath
         searchResult=re.search(self.previous_page_pat,str(previousUrlsPath))
@@ -280,6 +286,7 @@ class TvFantasySpider(scrapy.Spider):
             if page_url_str:
 
                 print "privious page's url is %s " %page_url_str
+                page_url_str="http://www.ttpet.com"+page_url_str
                 return page_url_str
         return None
 

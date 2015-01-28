@@ -22,7 +22,7 @@ class LensSubzeroSpider(scrapy.Spider):
 
     start_urls=['http://news.163.com/special/coldnews13']
 
-    # start_urls=['http://news.163.com/special/coldnewsltk']  
+    # start_urls=['http://news.163.com/special/coldnewsltk']
 
     root_class='-40度'
     #一级分类下面的频道

@@ -24,7 +24,7 @@ class CnetSpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
     start_urls=['http://www.cnetnews.com.cn/list-0-0-336525-0-1.htm']
-    start_urls=['http://www.cnetnews.com.cn/2015/0112/3044083.shtml']
+    # start_urls=['http://www.cnetnews.com.cn/2015/0112/3044083.shtml']
 
 
     root_class='40度'
