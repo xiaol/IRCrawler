@@ -22,7 +22,6 @@ class JandanColdNewsSpider(scrapy.Spider):
 
     # start_urls=['http://jandan.net/tag/%E7%AC%A8%E8%B4%BC']
     #
-    # start_urls=['http://jandan.net/2015/01/12/bizarre-suspects-images.html']
 
     root_class='0度'
     #一级分类下面的频道

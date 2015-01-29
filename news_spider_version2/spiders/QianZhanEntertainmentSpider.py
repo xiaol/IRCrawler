@@ -11,59 +11,55 @@ import re
 import HTMLParser
 
 
-class LensSubzeroSpider(scrapy.Spider):
-    name='NeteaseHeadlineNews'
-
-    allowed_domains=['zhenhua.163.com']
+class QianZhanEntertainmentSpider(scrapy.Spider):
+    name='QianZhanEntertainmentNews'
+    allowed_domains=['www.qianzhan.com']
 
     start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
                 'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
-    start_urls=['http://zhenhua.163.com/special/2014shangtoutiao']
+    start_urls=['http://www.lensmagazine.com.cn/category/reporting/focus','http://www.lensmagazine.com.cn/category/reporting/special-topic']
 
-    # start_urls=['http://zhenhua.163.com/special/shangtoutiao2014_mh370']
+    # start_urls=['http://www.lensmagazine.com.cn/reporting/focus/10174.html']
 
-    # start_urls=['http://zhenhua.163.com/special/shangtoutiao2014_yangweijun/']
+    start_urls=['http://www.qianzhan.com/ent/list/323.html','http://www.qianzhan.com/ent/list/325.html']
+    # start_urls=['http://www.qianzhan.com/ent/detail/323/150120-816bf569.html']
+    # start_urls=['http://www.qianzhan.com/ent/list/325.html']
+
+    # start_urls=['http://www.qianzhan.com/ent/detail/325/150121-b0999b33.html']
 
 
-
-    root_class='-40度'
+    root_class='40度'
     #一级分类下面的频道
-    default_channel='冰封'
+    default_channel='最热门'
      #源网站的名称
-    sourceSiteName='NeteaseHeadline'
+    sourceSiteName='QianZhanEntertainment'
 
-
+    channel_pat=re.compile(r'http://www.qianzhan.com/ent/detail/325/.*?')
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-    page_url_pattern=re.compile(r'^http://zhenhua\.163\.com/special/[^0-9]+.*?$')
+    page_url_pattern=re.compile(r'^http://www\.qianzhan\.com/ent/detail/.*?$')
 
     total_pages_pattern=re.compile(r'<span class="page-ch">.*?(\d+).*?</span>')
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
 
-    title_pat1=re.compile(r'<h3>(.+?)</h3>',re.DOTALL)
+    title_pat1=re.compile(r'<h1.*?>(.+?)</h1>')
     title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
 
-    time_pat=re.compile(r'<time.*?>(.*?)</time>')
+    time_pat=re.compile(r'<span id="pubtime_baidu">(.*?)</span>',re.DOTALL)
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p.*?</p>|<img.*?>|<span>.*?</span>',re.DOTALL)
-    content_pat1=re.compile(r'<img\s*?src=".*?"\s*?alt=".*?".*?>')
-    content_pat2=re.compile(r'<img\s*?src="(.*?)"\s*?alt="pic">')
-    img_pat=re.compile(r'<img\s*?alt=".*?"\s*?src="(.*?)">')
-    para_pat1=re.compile(r'<p.*?>\s*?(.*?)\s*?</p>',re.DOTALL)
-    para_pat2=re.compile(r'<span>(.*?)</span>',re.DOTALL)
-    previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
-    nonpage_url_pat=re.compile(r'<a.*?helink="(.*?)"\s*?hetext="\S+".*?hepos="left">')
+    content_pat=re.compile(r'<p.*?</p>',re.DOTALL)
+    img_pat=re.compile(r'<img\s*?src="(.*?)"\s*?alt=".*?".*?>')
+    para_pat=re.compile(r'<p.*?>(.*?)</p>')
 
-    nonpage_url_pat_1=re.compile(r'<a.*?helink=".*?"\s*?hetext="\S+".*?hepos="left">')
-    # <a class="sc-cur" href="javascript:;" target="_self" pltype="6" topicid="0001" sid="V9G6428S1" vid="V9GDRSQ3T" coverpic="http://img6.cache.netease.com/cnews/2013/12/30/20131230002308ee611.png" mpfour="http://flv.bn.netease.com/videolib3/1312/30/rLCZc2935/HD/rLCZc2935-mobile.mp4" hename="李侗奎" helink="http://news.163.com/special/coldnewsltk/" hetext="失独者：无法承受的余生>>" helife="他19岁结婚，婚后有了儿子李征。因当时计划生育政策抓的紧，考虑到生下的孩子又是男孩，可以传宗接代，他没有选择再生。后来儿子因病去世，他成为了失独者。时至今日，他仍然无法从丧子之痛中走出来。他说，不久的将来爸爸也会找你的。" hepos="left">
-
+    previous_page_pat=re.compile(r'<a\s*?href="([^"]*?)">\\u4e0b\\u4e00\\u9875</a>')
+    nonpage_url_pat=re.compile(r'<a.*?href="(http://www\.qianzhan\.com.*?)">')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
-    end_content_str='上头条往期回顾'
+    end_content_str='以上图文只是杂志上很小的一部分……'
 
 
     # http://tu.duowan.com/g/01/82/e7.html
@@ -74,7 +70,7 @@ class LensSubzeroSpider(scrapy.Spider):
     }
 
     def parse(self,response):
-
+  
         url=response._get_url()
         if self.isPage(response,url):
 
@@ -85,20 +81,20 @@ class LensSubzeroSpider(scrapy.Spider):
                 yield(result)
 
     def isPage(self,response,url):
-        if None==url:
+            if None==url:
+                return False
+            if re.match(self.page_url_pattern,url):
+                return True
             return False
-        if re.match(self.page_url_pattern,url):
-            return True
-        return False
-
-
 
 
 
     def dealWithPage(self,response,url):
         # item 的唯一标识 用源网址
         item=NewsItem()
+
         item['root_class']=self.extractRootClass(response)
+
         item['updateTime']=self.extractTime(response)
         item['title']=self.extractTitle(response)
         item['content']=self.extractContent(response)
@@ -118,22 +114,24 @@ class LensSubzeroSpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        print "hello"
-        raw_title_str=response.xpath('//div[@class="inner-right"]/div[@class="title"]').extract()[0]
-        # raw_title_str=response.xpath('//div[@class="headerBar"]').extract()[0]
+        raw_title_str=response.xpath('//div[@id="div_conbody"]').extract()[0]
         searchResult1=re.search(self.title_pat1,raw_title_str)
-
+        # searchResult2=re.search(self.title_pat2,raw_title_str)
+        # title=searchResult1+searchResult2
         if searchResult1:
             title=searchResult1.group(1)
-            title=title.replace('\n','')
-            title=title.replace('\t','')
-            title=CrawlerUtils.removeUnwantedTag(title)
             # title=searchResult1.group(1)
+            title=CrawlerUtils.removeUnwantedTag(title)
             return title
         return None
 
     def extractTime(self,response):
-
+        raw_time_str=response.xpath('//div[@class="info"]/p').extract()
+        print "raw,%s"%raw_time_str
+        searchResult=re.search(self.time_pat,str(raw_time_str))
+        if searchResult:
+            time=searchResult.group(1)
+            return self.formatTime(time)
         return CrawlerUtils.getDefaultTimeStr()
      # 2015-01-07 11:50:09
     def formatTime(self,timeStr):
@@ -143,22 +141,28 @@ class LensSubzeroSpider(scrapy.Spider):
         for digit in digitals:
             if len(digit)<2:
                 digit='0'+digit
-
+            if i==3 and timeStr.endswith('pm'):
+                hour=int(digit)+12
+                digit=str(hour)
             resultArr.append(digit)
             if i<2:
                 resultArr.append('-')
+            elif i==2:
+                resultArr.append(' ')
+            elif i<5:
+                resultArr.append(':')
             i=i+1
-        other_time=CrawlerUtils.getDefaultTimeStr()[10:]
-        resultArr.append(other_time)
-        # resultArr1=''.join(resultArr)
-        # print "result %s" %resultArr1
+        # second=CrawlerUtils.getDefaultTimeStr().split(':')[-1]
+        # resultArr.append(second)
         return ''.join(resultArr)
 
     def extractRootClass(self,response):
         return self.root_class
 
     def extractChannel(self,response,item):
-        # if item['tag']==None:
+        searchResult=re.search(self.channel_pat,item['sourceUrl'])
+        if searchResult:
+            return '热播剧'
         #     return self.default_channel
         # channel=self.channel_map[item['tag'][0].lower().encode('utf-8')]
         # if channel:
@@ -167,28 +171,25 @@ class LensSubzeroSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-
-        rawContent1=response.xpath('//div[@class="inner-right"]').extract()
-
-        if not len(rawContent1):
+        rawContent=response.xpath('//div[@id="div_content"]').extract()
+        if not len(rawContent):
             return None
         listInfos=[]
-        find_result1=re.findall(self.content_pat,rawContent1[0])
-        # print "find_result %s" %find_result[0][0]
 
-        for line in find_result1:
+        find_result=re.findall(self.content_pat,rawContent[0])
+        print "rawcontent %s" %find_result
+        for line in find_result:
             print "line,%s"%line
-            imgSearch=re.search(self.content_pat2,line)
+            imgSearch=re.findall(self.img_pat,line)
             if imgSearch:
-                listInfos.append({'img':imgSearch.group(1)})
-                print "img is %s" %imgSearch.group(1)
-
+                for img in imgSearch:
+                    # img=re.search(self.img_pat,img)
+                    listInfos.append({'img':img})
+                    print "img is %s" %img
             else:
-
-                txtSearch1=re.search(self.para_pat1,line)
-                txtSearch2=re.search(self.para_pat2,line)
-                if txtSearch1:
-                    result=txtSearch1.group(1)
+                txtSearch=re.search(self.para_pat,line)
+                if txtSearch:
+                    result=txtSearch.group(1)
                     result=CrawlerUtils.removeParasedCode(result)
                     result=CrawlerUtils.removeScript(result)
                     result=CrawlerUtils.removeUnwantedTag(result)
@@ -198,31 +199,17 @@ class LensSubzeroSpider(scrapy.Spider):
                             break
                         print "txt is :%s" %result
                         listInfos.append({'txt':result})
-                elif txtSearch2:
-                    result=txtSearch2.group(1)
-                    result=CrawlerUtils.removeParasedCode(result)
-                    result=CrawlerUtils.removeScript(result)
-                    result=CrawlerUtils.removeUnwantedTag(result)
-                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
-                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                        if self.end_content_str in result:
-                            break
-                        print "txt is :%s" %result
-                        listInfos.append({'txt':result})
-
         # print  "listInfos,%s" %listInfos
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
-
-        rawContent=response.xpath('//div[@class="inner-right"]').extract()
+        rawContent=response.xpath('//div[@id="div_content"]').extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.content_pat2,line)
-            print "imgsearch,%s"%imgSearch
+            imgSearch=re.search(self.img_pat,line)
             if imgSearch:
-                print "imgsearch,%s" %imgSearch.group(1)
+                print "imgsearch,%s"%imgSearch
                 return imgSearch.group(1)
         return None
 
@@ -234,32 +221,30 @@ class LensSubzeroSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
-        # raw_title_str=response.xpath('//div[@class="title"]').extract()[0]
-        # searchResult1=re.search(self.title_pat1,raw_title_str)
-
-        return None
+        tag=response.xpath('//div[@class="art_tags"]/div[@class="tags"]/div/a/text()').extract()
+        print "tag,%s"%tag
+        return tag
 
 
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
+        # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
+        pages_arr=response.xpath('//div[@class="txt_list"]/ul/li').extract()  #/li[@class="box masonry-brick"
 
-
-        pages_arr=response.xpath('//ul[@class="accordion"]/li/div[@class="description"]/h2/a/@href').extract()  #/li[@class="box masonry-brick"
-        # pages_result=re.findall(self.nonpage_url_pat_1,pages_arr)
-        # results=[]
         print "pages_arr,%s" %pages_arr
         results=[]
-        for new_page_url in pages_arr:
-            # print "new_page_url,%s"%new_page_url
-            if new_page_url:
-                # new_page_url_1=re.search(self.nonpage_url_pat,new_page_url)
-                # new_page_url2=new_page_url_1.group(1)
-                # print "new_page_url2,%s"%new_page_url2
+
+        for new_page_url_raw in pages_arr:
+            searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
+            if searchResult:
+                new_page_url=searchResult.group(1)
+                print "new_page_url is %s" %new_page_url
                 results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
-        # prevoius_page_url=self.getPrevoiuPageUrl(response)
-        # if prevoius_page_url:
-        #     results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=True))
-        return results
+        prevoius_page_url=self.getPrevoiuPageUrl(response)
+        print "pevoious_page_url,%s"%prevoius_page_url
+        if prevoius_page_url:
+            results.append(scrapy.Request(prevoius_page_url,callback=self.parse,dont_filter=True))
+            return results
 
 
 
@@ -270,16 +255,21 @@ class LensSubzeroSpider(scrapy.Spider):
         #     results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=True))
         # return results
 
-
+# http://t.qianzhan.com//dazahui/p-2.html
      #获取前面一页的url
     def getPrevoiuPageUrl(self,response):
         title_sign=u'下一页'
-        xpath_str='//div[@class="box gra"]/ul/li/a[@title="下一页"]/@href'.decode('utf8')
+        xpath_str='//div[@class="page"]'.decode('utf8')
         previousUrlsPath=response.xpath(xpath_str).extract()
-        if len(previousUrlsPath):
-            page_url_str=previousUrlsPath[0]
+        print "previousUrlsPath,%s"%previousUrlsPath
+        searchResult=re.search(self.previous_page_pat,str(previousUrlsPath))
+
+        # print "hello"
+        if searchResult:
+            page_url_str=searchResult.group(1)
             if page_url_str:
-                # print "privious page's url is %s " %page_url_str
+                page_url_str="http://www.qianzhan.com"+page_url_str
+                print "privious page's url is %s " %page_url_str
                 return page_url_str
         return None
 
@@ -304,10 +294,11 @@ class LensSubzeroSpider(scrapy.Spider):
 
     def main(self,url):
        urlStr=self.getHtmlContentUnicode(url)
-       # print urlStr
+       print urlStr
 
-#
-#
+
+
+
 if __name__=='__main__':
     some_interface='http://jandan.duoshuo.com/api/threads/listPosts.json?thread_key=comment-2650694&url=http%3A%2F%2Fjandan.net%2Fooxx%2Fpage-1301%26yid%3Dcomment-2650694&image=http%3A%2F%2Fww1.sinaimg.cn%2Fmw600%2Fa00dfa2agw1enxg54qbbfj20n40x6755.jpg&require=site%2Cvisitor%2Cnonce%2CserverTime%2Clang&site_ims=1420356603&lang_ims=1420356603&v=140327'
     print "the interface is %s"%some_interface
