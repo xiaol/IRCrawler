@@ -10,7 +10,9 @@ class SimilarityCaculater:
 
     @classmethod
     def caculate(cls,item1,item2):
-        sim_title=cls.caculateTitleSimilarity(item1['title'],item2['title'])
+        sim_title=0.0
+        if 'title' in item1 and 'title' in item2:
+            sim_title=cls.caculateTitleSimilarity(item1['title'],item2['title'])
         sim_tag=cls.caculateTagSim(item1,item2)
         sim=cls.w_tag*sim_tag+cls.w_title*sim_title
         return sim
