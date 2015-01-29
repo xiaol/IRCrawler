@@ -24,6 +24,10 @@ class LensSubzeroSpider(scrapy.Spider):
 
     # start_urls=['http://zhenhua.163.com/special/shangtoutiao2014_mh370']
 
+    # start_urls=['http://zhenhua.163.com/special/shangtoutiao2014_yangweijun/']
+
+
+
     root_class='-40度'
     #一级分类下面的频道
     default_channel='冰封'
@@ -123,7 +127,7 @@ class LensSubzeroSpider(scrapy.Spider):
             title=searchResult1.group(1)
             title=title.replace('\n','')
             title=title.replace('\t','')
-
+            title=CrawlerUtils.removeUnwantedTag(title)
             # title=searchResult1.group(1)
             return title
         return None

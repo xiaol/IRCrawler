@@ -32,11 +32,11 @@ class MtimeSpider(scrapy.Spider):
 
     # start_urls=['http://news.mtime.com/2015/01/21/1538635.html']
 
-    # start_urls=['http://news.mtime.com/tv/3/index.html#nav']
+    # start_urls=['http://news.mtime.com/tv/3/index.html#nav']     
 
     # start_urls=['http://news.mtime.com/2015/01/21/1538635.html']
-
-
+    #
+    # start_urls=['http://news.mtime.com/2014/07/06/1529004.html']
 
 
 
@@ -137,7 +137,7 @@ class MtimeSpider(scrapy.Spider):
         return None
 
     def extractTime(self,response):
-        raw_time_str=response.xpath('//div[@class="newsheader "]/p').extract()
+        raw_time_str=response.xpath('//div[contains(@class,"newsheader")]/p').extract()
         print "raw,%s"%raw_time_str
         searchResult=re.search(self.time_pat,str(raw_time_str))
         if searchResult:

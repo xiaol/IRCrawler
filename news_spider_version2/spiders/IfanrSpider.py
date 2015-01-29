@@ -33,9 +33,10 @@ class IfanrSpider(scrapy.Spider):
     # start_urls=['http://news.mtime.com/2015/01/21/1538635.html']
 
     start_urls=['http://www.ifanr.com/news']
-
+    #
     # start_urls=['http://www.ifanr.com/news/485791']
-
+    # start_urls=['http://www.ifanr.com/news/486775']
+    # start_urls=['http://www.ifanr.com/news/486772']
 
 
 
@@ -62,9 +63,9 @@ class IfanrSpider(scrapy.Spider):
     time_pat=re.compile(r'<div class="entry-meta clearfix">(.*?)</div>')
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p>.*?</p>|<li>.*?</li>',re.DOTALL)
+    content_pat=re.compile(r'<p.*?</p>|<li>.*?</li>',re.DOTALL)
     img_pat=re.compile(r'<img.*?src="(.*?)".*?>')
-    para_pat=re.compile(r'<p>(.*?)</p>|<li>(.*?)</li>')
+    para_pat=re.compile(r'<p.*?>(.*?)</p>|<li>(.*?)</li>')
 
     previous_page_pat=re.compile(r'<a\s*?href="([^"]*?)"[^>]*?>\\u4e0b\\u4e00\\u9875</a>')
     nonpage_url_pat=re.compile(r'<a\s*?href="(http://www\.ifanr\.com/news/\d+)".*?>')
