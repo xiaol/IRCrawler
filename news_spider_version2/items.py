@@ -48,7 +48,7 @@ class NewsItem(scrapy.Item):
         print "imgUrl is %s" %self['imgUrl']
         print "updateTime is %s" %self['updateTime']
         print "sourceSiteName is %s" %self['sourceSiteName']
-        print "description is %s" %self['description']
+        # print "description is %s" %self['description']
         print "sourceUrl is %s" %self['sourceUrl']
         print "tag is %s" %self['tag']
 
@@ -182,3 +182,21 @@ class NewsProductItem(scrapy.Item):
         for key in keys:
             if key in dict_obj:
                 self[key]=dict_obj[key]
+
+
+class SimilarItem(scrapy.Item):
+    # item 的唯一标识 用源网址
+    _id=scrapy.Field()
+    similar_items=scrapy.Field()
+
+    def printSelf(self):
+        print " _id is %s" %self['_id']
+
+    # def cloneInfoFromDict(self,dict_obj):
+    #     keys=['_id','title','content','imgUrl','updateTime',
+    #           'sourceSiteName','description','sourceUrl','tag','city']
+    #     if dict_obj==None:
+    #         return
+    #     for key in keys:
+    #         if key in dict_obj:
+    #             self[key]=dict_obj[key]
