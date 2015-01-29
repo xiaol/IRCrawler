@@ -31,7 +31,7 @@ class LensSubzeroSpider(scrapy.Spider):
     #一级分类下面的频道
     default_channel='冰封'
      #源网站的名称
-    sourceSiteName='Lensmagazine'
+    sourceSiteName='Lens'
 
   
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')

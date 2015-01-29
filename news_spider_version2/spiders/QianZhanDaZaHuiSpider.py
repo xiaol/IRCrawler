@@ -31,7 +31,7 @@ class QianZhanSpider(scrapy.Spider):
     #一级分类下面的频道
     default_channel='最热门'
      #源网站的名称
-    sourceSiteName='QianZhan'
+    sourceSiteName='头条前瞻'
 
   
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')

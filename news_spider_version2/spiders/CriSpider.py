@@ -31,7 +31,7 @@ class CriSpider(scrapy.Spider):
     #一级分类下面的频道
     default_channel='最热门'
      #源网站的名称
-    sourceSiteName='Cri'
+    sourceSiteName='国际在线'
 
     channel_pat=re.compile(r'http://www.qianzhan.com/ent/detail/325/.*?')
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
