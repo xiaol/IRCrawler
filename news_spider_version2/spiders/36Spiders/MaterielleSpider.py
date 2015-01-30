@@ -19,8 +19,9 @@ class MateriellerSpider(scrapy.Spider):
                 'http://materielle.cn/fashion.aspx?Class_id=2',
                 'http://materielle.cn/fashion.aspx?Class_id=7',
                 'http://materielle.cn/fashion.aspx?Class_id=3']
-    # start_urls=['http://www.vice.cn/read/shit-happens-20150105']
+    start_urls=['http://materielle.cn/fashion1.aspx?Class_id=2&Class_page=419']
 
+    base_url='http://materielle.cn/'
 
     root_class='36度'
     #一级分类下面的频道
@@ -43,11 +44,11 @@ class MateriellerSpider(scrapy.Spider):
     digit_pat=re.compile(r'\d+')
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
 
-    content_pat=re.compile(r'<p>\s*?.+?\s*?</p>')
-    img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'<p>\s*?(.+?)\s*?</p>')
+    content_pat=re.compile(r'<p>\s*?.+?\s*?</p>',re.DOTALL)
+    img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>',re.DOTALL)
+    para_pat=re.compile(r'<span style=".*?">(.*?)</span>',re.DOTALL)
 
-    previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
+    # previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
     html_parser = HTMLParser.HTMLParser()
 
@@ -60,9 +61,9 @@ class MateriellerSpider(scrapy.Spider):
         if page_test:
             yield self.dealWithPage(response,url)
         else:
-            non_page_results,results=self.dealWithNonPage(response,url)
-            for non_page_result in non_page_results:
-                yield(non_page_result)
+            results=self.dealWithNonPage(response,url)
+            # for non_page_result in non_page_results:
+            #     yield(non_page_result)
             for result in results:
                 yield(result)
 
@@ -100,12 +101,15 @@ class MateriellerSpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        title=response.xpath('//h1[@class="entry-title single-title"]/span/text()').extract()[0]
+        xpath_str='//div[@class="fashion_l"]/span[@style]/text()'
+        title=response.xpath(xpath_str).extract()[0]
+        title=title.strip()
         return title
 
     def extractTime(self,response):
-        xpath_str='//div[@class="entry-meta"]/span[@class="entry-date"]/text()'
-        raw_time_str=response.xpath(xpath_str).extract()[0]
+        xpath_str='//div[@class="fashion_l"]/span[@style]/text()'
+        raw_time_arr=response.xpath(xpath_str).extract()
+        raw_time_str=raw_time_arr[2]
         time=self.formatTime(raw_time_str)
         return time
 
@@ -136,20 +140,23 @@ class MateriellerSpider(scrapy.Spider):
        return self.default_channel
 
     def extractContent(self,response):
-        xpath_str='//div[@class="article_content"]'
+        xpath_str='//div[@class="fashion_l"]'
         rawContent=response.xpath(xpath_str).extract()[0]
-        return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
+        base_url=self.base_url[0:len(self.base_url)-1]
+        print "the base_url is %s" %base_url
+        return CrawlerUtils.extractContentImgTxtMixture(rawContent,self.content_pat,self.img_pat,self.para_pat,base_url)
 
 
     def extractImgUrl(self,response):
-        xpath_str='//div[@class="article_content"]'
+        xpath_str='//div[@class="fashion_l"]'
         rawContent=response.xpath(xpath_str).extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
             imgSearch=re.search(self.img_pat,line)
             if imgSearch:
-                return imgSearch.group(1)
+                base_url=self.base_url[0:len(self.base_url)-1]
+                return base_url+imgSearch.group(1)
         return None
 
     def extractDesc(self,response):
@@ -161,8 +168,8 @@ class MateriellerSpider(scrapy.Spider):
     #获取文章的tag信息
     def extractTag(self,response):
         tag=[]
-        xpath_str='//div[@class="entry-meta"]/span[@class="entry-category"]/a/text()'
-        category=response.xpath(xpath_str).extract()[-1]
+        xpath_str='//div[@class="nav_t"]/text()'
+        category=response.xpath(xpath_str).extract()[0]
         if category in self.tag_map:
              tag.append(self.tag_map[category])
         else:
@@ -171,17 +178,18 @@ class MateriellerSpider(scrapy.Spider):
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
-        xpath_str='//article[@class]/figure/a/@href'
+        xpath_str='//div[@class="fashion_l_1"]/div[@class="dis1"]/a/@href'
         pages_arr=response.xpath(xpath_str).extract()
         request_items=[]
         for elem in pages_arr:
             page_url=self.base_url+elem
+            print "the page url is %s" %page_url
             request_items.append(scrapy.Request(page_url,callback=self.parse,dont_filter=False))
 
-        non_page_results=[]
-        non_page_url=self.getPrevoiuPageUrl(response)
-        non_page_results.append(scrapy.Request(non_page_url,callback=self.parse,dont_filter=False))
-        return non_page_results,request_items
+        # non_page_results=[]
+        # non_page_url=self.getPrevoiuPageUrl(response)
+        # non_page_results.append(scrapy.Request(non_page_url,callback=self.parse,dont_filter=False))
+        return request_items
 
 
     #获取前面一页的url
@@ -200,4 +208,7 @@ if __name__=='__main__':
     # print "the interface is %s"%some_interface
     # html_parser=HTMLParser.HTMLParser()
     # print "the unscaped is %s " %html_parser.unescape(some_interface)
+    spider=MateriellerSpider()
+    base_url=spider.base_url[0:len(spider.base_url)-1]
+    print "the base_url is %s" %base_url
     print "Hello world"
