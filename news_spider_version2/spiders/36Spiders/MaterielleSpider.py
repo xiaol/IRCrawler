@@ -144,7 +144,11 @@ class MateriellerSpider(scrapy.Spider):
         rawContent=response.xpath(xpath_str).extract()[0]
         base_url=self.base_url[0:len(self.base_url)-1]
         print "the base_url is %s" %base_url
-        return CrawlerUtils.extractContentImgTxtMixture(rawContent,self.content_pat,self.img_pat,self.para_pat,base_url)
+        content=CrawlerUtils.extractContentImgTxtMixture(rawContent,self.content_pat,self.img_pat,self.para_pat,base_url)
+        if content==None:
+            return None
+        if 0==len(content):
+            return None
 
 
     def extractImgUrl(self,response):

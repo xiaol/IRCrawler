@@ -29,10 +29,12 @@ class NewsSpiderVersion2Pipeline(object):
     def process_item(self, item, spider):
         if type(item) is NewsItem:
             scrapedItem={'_id':item['_id']}
-            # if self.scrappedColl.find_one(scrapedItem):
-            #     log.msg("Item %s alread exists in  database " %(item['_id']),
-            #         level=log.DEBUG, spider=spider)
-            #     return item
+            if self.scrappedColl.find_one(scrapedItem):
+                log.msg("Item %s alread exists in  database " %(item['_id']),
+                    level=log.DEBUG, spider=spider)
+                return item
+            if None==item['content']:
+                return item
             item_dict=dict(item)
             self.collection.save(item_dict)
             self.scrappedColl.save(scrapedItem)
