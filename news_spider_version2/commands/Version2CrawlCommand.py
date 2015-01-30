@@ -22,7 +22,7 @@ class AllCrawlCommand(ScrapyCommand):
         crawler = self.crawler_process.create_crawler()
         i=0
         for s in crawler.spiders.list():
-            values={'project':'myproject','spider':s}
+            values={'project':'news_spider_version2','spider':s}
             data=urllib.urlencode(values)
             req=urllib2.Request(url,data)
             response=urllib2.urlopen(req)
