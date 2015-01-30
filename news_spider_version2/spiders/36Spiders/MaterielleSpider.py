@@ -19,7 +19,7 @@ class MateriellerSpider(scrapy.Spider):
                 'http://materielle.cn/fashion.aspx?Class_id=2',
                 'http://materielle.cn/fashion.aspx?Class_id=7',
                 'http://materielle.cn/fashion.aspx?Class_id=3']
-    start_urls=['http://materielle.cn/fashion1.aspx?Class_id=2&Class_page=419']
+    # start_urls=['http://materielle.cn/fashion1.aspx?Class_id=2&Class_page=419']
 
     base_url='http://materielle.cn/'
 
@@ -46,7 +46,7 @@ class MateriellerSpider(scrapy.Spider):
 
     content_pat=re.compile(r'<p>\s*?.+?\s*?</p>',re.DOTALL)
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>',re.DOTALL)
-    para_pat=re.compile(r'<span style=".*?">(.*?)</span>',re.DOTALL)
+    para_pat=re.compile(r'<span style="line-height.*?">(.*?)</span>',re.DOTALL)
 
     # previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
