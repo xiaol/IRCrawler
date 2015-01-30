@@ -20,6 +20,10 @@ class SimilarityCaculater:
     @classmethod
     def caculateTagSim(cls,item1,item2):
         sim_tag=0
+        if not 'tag' in item1 or not 'tag' in item2:
+            return 0.0
+        if None==item1['tag'] or None==item2['tag']:
+            return 0.0
         for tag in item1['tag']:
             if tag in item2['tag']:
                 sim_tag=sim_tag+1

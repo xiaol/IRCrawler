@@ -4,7 +4,7 @@ from scrapy.conf import settings
 from news_spider_version2.item_recommender.SimilarityCaculater import SimilarityCaculater
 from operator import itemgetter
 from pymongo import ReadPreference
-
+from news_spider_version2.items import SimilarItem
 
 
 class ItemRecommender:
@@ -12,6 +12,7 @@ class ItemRecommender:
                                                              read_preference=ReadPreference.PRIMARY)
     db = connection[settings['MONGODB_DB']]
     collection = db[settings['MONGODB_COLLECTION']]
+    item_to_item_collection=db[settings['MONGODB_ITEM_TO_ITEM_COLL']]
 
     @classmethod
     def recommend_by_item(cls,item):
@@ -38,6 +39,20 @@ class ItemRecommender:
     def getItems(cls,root_class,channel,num):
         docs = cls.collection.find({"root_class": root_class,"channel":channel}).sort([("updateTime", -1)]).limit(num)
         return docs
+
+    def main(self):
+        for item in self.collection.find().sort([("updateTime", -1)]):
+            print "itemid is %s" %item['_id']
+            results=self.recommend_by_item(item)
+            similarItem=SimilarItem()
+            similarItem['_id']=item['_id']
+            similarItem['similar_items']=results
+            self.item_to_item_collection.save(dict(similarItem))
+
+if __name__=='__main__':
+    itemRecommender=ItemRecommender()
+    print "hello world"
+    itemRecommender.main()
 
 
 

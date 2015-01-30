@@ -11,36 +11,34 @@ import re
 import HTMLParser
 
 
-class ViceCnSpider(scrapy.Spider):
-    name='viceCnSpider'
-    allowed_domains=['www.vice.cn']
+class MateriellerSpider(scrapy.Spider):
+    name='materiellerSpider'
+    allowed_domains=['materielle.cn']
 
-    start_urls=['http://www.vice.cn/news',
-                'http://www.vice.cn/travel',
-                'http://www.vice.cn/fasion',
-                'http://www.vice.cn/photo',
-                'http://www.vice.cn/noisey',
-                'http://www.vice.cn/tag/漫画']
+    start_urls=['http://materielle.cn/fashion.aspx?Class_id=4',
+                'http://materielle.cn/fashion.aspx?Class_id=2',
+                'http://materielle.cn/fashion.aspx?Class_id=7',
+                'http://materielle.cn/fashion.aspx?Class_id=3']
     # start_urls=['http://www.vice.cn/read/shit-happens-20150105']
 
-    base_url="http://www.vice.cn"
 
     root_class='36度'
     #一级分类下面的频道
     default_channel='同步喜好'
      #源网站的名称
-    sourceSiteName='豆瓣'
+    sourceSiteName='物质生活'
 
     default_tag='懂生活'
 
     tag_map={
-        "事儿":"懂生活","旅行":"懂生活",
-        "时尚":"拗造型","摄影":"有腔调",
-        "NOISEY 音乐":"有腔调","漫画":"玩出范"
+        "travel":"懂生活",
+        "fashion":"拗造型",
+        "beauty":"拗造型",
+        "culture":"拗造型",
     }
 
-    page_url_pattern=re.compile(r'^http://www.vice.cn/read/.*')
-    non_page_url_pattern=re.compile(r'^http://www.vice.cn/.*')
+    page_url_pattern=re.compile(r'^http://materielle\.cn/.*?\.aspx\?Class_id=\d+&Class_page=\d+')
+    non_page_url_pattern=re.compile(r'^http://materielle\.cn/.*?\.aspx\?Class_id=\d+?')
 
     digit_pat=re.compile(r'\d+')
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
