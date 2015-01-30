@@ -31,7 +31,7 @@ class CnetSpider(scrapy.Spider):
     #一级分类下面的频道
     default_channel='数码科技'
      #源网站的名称
-    sourceSiteName='Cnet'
+    sourceSiteName='CNET'
 
     channel_pat=re.compile(r'http://www.qianzhan.com/ent/detail/325/.*?')
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
