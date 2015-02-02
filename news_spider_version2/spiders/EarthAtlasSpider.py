@@ -64,16 +64,19 @@ class LensSubzeroSpider(scrapy.Spider):
         '笨贼':'冷幽默','熊孩子':'冷幽默'
     }
 
-    def parse(self,response):
+    def parse(self,response):                               
 
         url=response._get_url()
         if self.isPage(response,url):
-
-            yield self.dealWithPage(response,url)
+            # print "hello"
+            pass
+            # yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
             for result in results:
-                yield(result)
+                # print "hello"
+                pass
+                # yield(result)
 
     def isPage(self,response,url):
         if None==url:
