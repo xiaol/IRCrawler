@@ -19,7 +19,8 @@ class MateriellerSpider(scrapy.Spider):
                 'http://materielle.cn/fashion.aspx?Class_id=2',
                 'http://materielle.cn/fashion.aspx?Class_id=7',
                 'http://materielle.cn/fashion.aspx?Class_id=3']
-    # start_urls=['http://materielle.cn/fashion1.aspx?Class_id=2&Class_page=419']
+
+    # start_urls=['http://materielle.cn/fashion1.aspx?Class_id=4&Class_page=411']
 
     base_url='http://materielle.cn/'
 
@@ -44,9 +45,9 @@ class MateriellerSpider(scrapy.Spider):
     digit_pat=re.compile(r'\d+')
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
 
-    content_pat=re.compile(r'<p>\s*?.+?\s*?</p>',re.DOTALL)
+    content_pat=re.compile(r'<p(?: .*?)?>\s*?.+?\s*?</p>|<div style="text-transform.*?>.*?</div>',re.DOTALL)
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>',re.DOTALL)
-    para_pat=re.compile(r'<span style="line-height.*?">(.*?)</span>',re.DOTALL)
+    para_pat=re.compile(r'<span style="font-family.*?">(.*?)</span>',re.DOTALL)
 
     # previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
@@ -90,6 +91,7 @@ class MateriellerSpider(scrapy.Spider):
         item['sourceUrl']=url
         item['sourceSiteName']=self.extractSourceSiteName(response)
         item['tag']=self.extractTag(response)
+        item['edit_tag']=self.extractEditTag(response)
         item['channel']=self.extractChannel(response,item)
         item['_id']=self.generateItemId(item)
         item['description']=self.extractDesc(response)
@@ -144,11 +146,12 @@ class MateriellerSpider(scrapy.Spider):
         rawContent=response.xpath(xpath_str).extract()[0]
         base_url=self.base_url[0:len(self.base_url)-1]
         print "the base_url is %s" %base_url
-        content=CrawlerUtils.extractContentImgTxtMixture(rawContent,self.content_pat,self.img_pat,self.para_pat,base_url)
+        content=CrawlerUtils.extractContentImgTxtMixture(rawContent,self.content_pat,self.img_pat,self.para_pat)
         if content==None:
             return None
         if 0==len(content):
             return None
+        return content
 
 
     def extractImgUrl(self,response):
@@ -179,6 +182,15 @@ class MateriellerSpider(scrapy.Spider):
         else:
             tag.append(self.default_tag)
         return tag
+
+    def extractEditTag(self,response):
+         #获取文章的tag信息
+        xpath_str='//div[@class="nav_t"]/text()'
+        category=response.xpath(xpath_str).extract()[0]
+        if category in self.tag_map:
+             return self.tag_map[category]
+
+        return self.default_tag
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):

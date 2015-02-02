@@ -56,7 +56,7 @@ class SimilarityCaculater:
         i=0
         for word in listStr1:
             word_dict[word]=i
-        i=i+1
+            i=i+1
         for word in listStr2:
             if word not in word_dict:
                 word_dict[word]=i

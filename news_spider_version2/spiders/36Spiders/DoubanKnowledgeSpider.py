@@ -81,6 +81,7 @@ class DoubanKnowlegeSpider(scrapy.Spider):
         item['sourceUrl']=url
         item['sourceSiteName']=self.extractSourceSiteName(response)
         item['tag']=self.extractTag(response)
+        item['edit_tag']=self.extractEditTag(response)
         item['channel']=self.extractChannel(response,item)
         item['_id']=self.generateItemId(item)
         item['description']=self.extractDesc(response)
@@ -135,6 +136,13 @@ class DoubanKnowlegeSpider(scrapy.Spider):
         tag=[]
         tag.append(self.default_tag)
         return tag
+
+    #获取文章的tag信息
+    def extractEditTag(self,response):
+        # xpath_str='//div[@class="note_upper_footer"]/div[@class="footer-tags"]/a/text()'
+        # tag=response.xpath(xpath_str).extract()
+        # return tag
+       return self.default_tag;
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
