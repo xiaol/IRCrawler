@@ -23,6 +23,8 @@ class LensSubzeroSpider(scrapy.Spider):
     start_urls=['http://world.yam.com']
 
     # start_urls=['http://world.yam.com/post.php?id=3182']
+    # start_urls=['http://world.yam.com/post.php?id=3292']
+    # start_urls=['http://world.yam.com/post.php?id=3296']
 
     root_class='40度'
     #一级分类下面的频道
@@ -52,10 +54,10 @@ class LensSubzeroSpider(scrapy.Spider):
     para_pat=re.compile(r'<p>(.*?)</p>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
-    nonpage_url_pat=re.compile(r'<a class="intro"\s*?href="(post.php\?id=\d*?)">')
+    nonpage_url_pat=re.compile(r'<a class=".*?"\s*?href="(post.php\?id=\d*?)">')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
     end_content_str='以上图文只是杂志上很小的一部分……'
-
+    start_content_str='-本文'
 
     # http://tu.duowan.com/g/01/82/e7.html
     html_parser = HTMLParser.HTMLParser()
@@ -67,12 +69,18 @@ class LensSubzeroSpider(scrapy.Spider):
     def parse(self,response):
 
         url=response._get_url()
-        if self.isPage(response,url):
 
+        print self.extractContent(response)
+        if self.isPage(response,url) and not self.extractContent(response):
+            # print "hello"
+            pass
+        elif self.isPage(response,url) and self.extractContent(response):
             yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
             for result in results:
+                # print "hello"
+                # pass
                 yield(result)
 
     def isPage(self,response,url):
@@ -180,6 +188,8 @@ class LensSubzeroSpider(scrapy.Spider):
                     result=CrawlerUtils.removeUnwantedTag(result)
                     if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+                        if self.start_content_str in result:
+                            return False
                         if self.end_content_str in result:
                             break
                         print "txt is :%s" %result
@@ -206,21 +216,25 @@ class LensSubzeroSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
-        # raw_title_str=response.xpath('//div[@class="title"]').extract()[0]
+        tag=response.xpath('//div[@class="tabsBox curr"]/a/text()').extract()
         # searchResult1=re.search(self.title_pat1,raw_title_str)
-
+        if tag:
+            print "tag,%s"%tag
+            return tag
         return None
 
 
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
         # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
-        pages_arr=response.xpath('//article[@id="toperContainer"]/section').extract()  #/li[@class="box masonry-brick"
+        pages_arr=response.xpath('//div[@id="mainContent"]').extract()[0]  #/li[@class="box masonry-brick"
         results=[]
-        for new_page_url_raw in pages_arr:
-            searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
-            if searchResult:
-                new_page_url="http://world.yam.com/"+searchResult.group(1)
+        pages_arr_update=re.findall(self.nonpage_url_pat,pages_arr)
+        for new_page_url_raw in pages_arr_update:
+            # searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
+            if new_page_url_raw:
+                new_page_url="http://world.yam.com/"+new_page_url_raw
+                print "new_page_url,%s"%new_page_url
                 results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
         # prevoius_page_url=self.getPrevoiuPageUrl(response)
         # if prevoius_page_url:
