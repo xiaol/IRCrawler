@@ -1,6 +1,8 @@
 #coding=utf-8
 from news_spider_version2.items import NewsItem, PartialNewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
+from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
+
 
 __author__ = 'galois'
 
@@ -10,43 +12,31 @@ import re
 import HTMLParser
 
 
-class ViceCnSpider(scrapy.Spider):
-    name='viceCnSpider'
-    allowed_domains=['www.vice.cn']
+class ZhimovieSpider(scrapy.Spider):
+    name='zhimovieSpider'
+    allowed_domains=['zhihu.com']
 
-    start_urls=['http://www.vice.cn/news',
-                'http://www.vice.cn/travel',
-                'http://www.vice.cn/fasion',
-                'http://www.vice.cn/photo',
-                'http://www.vice.cn/noisey',
-                'http://www.vice.cn/tag/漫画']
-    # start_urls=['http://www.vice.cn/fasion']
-
-    base_url="http://www.vice.cn"
+    start_urls=['http://zhuanlan.zhihu.com/zhimovie']
+    # start_urls=['http://www.douban.com/note/427790805']
 
     root_class='36度'
     #一级分类下面的频道
     default_channel='同步喜好'
      #源网站的名称
-    sourceSiteName='Vice中国'
+    sourceSiteName='知影'
 
-    default_tag='有腔调'
+    default_tag='开眼界'
 
-    tag_map={
-        "事儿":"懂生活","旅行":"懂生活",
-        "时尚":"拗造型","摄影":"有腔调",
-        "NOISEY 音乐":"有腔调","漫画":"玩出范"
-    }
+    base_url="http://zhuanlan.zhihu.com"
 
-    page_url_pattern=re.compile(r'^http://www.vice.cn/read/.*')
-    non_page_url_pattern=re.compile(r'^http://www.vice.cn/.*')
+    page_url_pattern=re.compile(r'^http://zhuanlan.zhihu.com/zhimovie/\d+')
+    non_page_url_pattern=re.compile(r'^http://zhuanlan.zhihu.com/zhimovie')
 
-    digit_pat=re.compile(r'\d+')
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
 
-    content_pat=re.compile(r'<p>\s*?.+?\s*?</p>')
+    content_pat=re.compile(r'\s*[^>]*?\s*<br>|<img(?: .*?)? src=".*?"(?: .*?)?>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'<p>\s*?(.+?)\s*?</p>')
+    para_pat=re.compile(r'\s*([^>]*?)\s*<br>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
@@ -102,50 +92,27 @@ class ViceCnSpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        title=response.xpath('//h1[@class="entry-title single-title"]/span/text()').extract()[0]
+        title=response.xpath('//div[@class="note-header note-header-container"]/h1/text()').extract()[0]
         return title
 
     def extractTime(self,response):
-        xpath_str='//div[@class="entry-meta"]/span[@class="entry-date"]/text()'
-        raw_time_str=response.xpath(xpath_str).extract()[0]
-        time=self.formatTime(raw_time_str)
+        raw_time_str=response.xpath('//div[@class="note-header note-header-container"]/div/span/text()').extract()[0]
+        time=raw_time_str
         return time
-
-    def formatTime(self,raw_time):
-        i=0
-        digit_arr=[]
-        for digit in re.findall(self.digit_pat,raw_time):
-            print "the %dth digit is %s" %(i,digit)
-            if len(digit)<2:
-                digit="0"+digit
-            digit_arr.append(digit)
-            if(i<2):
-                digit_arr.append('-')
-            i=i+1
-        digit_arr.append(' ')
-        default_time=CrawlerUtils.getDefaultTimeStr()
-        digit_arr.append(default_time.split(' ')[1])
-        time=''.join(digit_arr)
-        print "the formated time is %s"%time
-        return time
-
-
 
     def extractRootClass(self,response):
         return self.root_class
 
     def extractChannel(self,response,item):
-       return self.default_channel
+        return self.default_channel
 
     def extractContent(self,response):
-        xpath_str='//div[@class="article_content"]'
-        rawContent=response.xpath(xpath_str).extract()[0]
+        rawContent=response.xpath('//div[@id="link-report"]').extract()[0]
         return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
 
 
     def extractImgUrl(self,response):
-        xpath_str='//div[@class="article_content"]'
-        rawContent=response.xpath(xpath_str).extract()
+        rawContent=response.xpath('//div[@id="link-report"]').extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
@@ -162,49 +129,44 @@ class ViceCnSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
+        # xpath_str='//div[@class="note_upper_footer"]/div[@class="footer-tags"]/a/text()'
+        # tag=response.xpath(xpath_str).extract()
+        # return tag
         tag=[]
-        xpath_str='//div[@class="single-box clearfix entry-content"]/div[@class="entry-meta"]/span[@class="entry-category"]/a/text()'
-        category=response.xpath(xpath_str).extract()[-1].encode('utf-8')
-        if category in self.tag_map:
-             tag.append(self.tag_map[category])
-        else:
-            tag.append(self.default_tag)
+        tag.append(self.default_tag)
         return tag
 
     #获取文章的tag信息
     def extractEditTag(self,response):
-        xpath_str='//div[@class="single-box clearfix entry-content"]/div[@class="entry-meta"]/span[@class="entry-category"]/a/text()'
-        category=response.xpath(xpath_str).extract()[-1].encode('utf-8')
-        if category in self.tag_map:
-            return self.tag_map[category]
-        return self.default_tag
+        # xpath_str='//div[@class="note_upper_footer"]/div[@class="footer-tags"]/a/text()'
+        # tag=response.xpath(xpath_str).extract()
+        # return tag
+       return self.default_tag;
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
-        xpath_str='//article[@class]/figure/a/@href'
+        xpath_str='//div[@class="items-container ui-infinite"]/ul[@class="items"]/li/article/header/a/@href'
         pages_arr=response.xpath(xpath_str).extract()
         request_items=[]
         for elem in pages_arr:
-            page_url=self.base_url+elem
-            print "the page url is %s"%page_url
-            request_items.append(scrapy.Request(page_url,callback=self.parse,dont_filter=False))
+            pageUrl=self.base_url+elem
+            print "the pageUrl is %s"%pageUrl
+            request_items.append(scrapy.Request(pageUrl,callback=self.parse,dont_filter=False))
 
         non_page_results=[]
-        non_page_url=self.getPrevoiuPageUrl(response)
-        if non_page_url:
-            non_page_results.append(scrapy.Request(non_page_url,callback=self.parse,dont_filter=False))
         return non_page_results,request_items
 
 
-    #获取前面一页的url
+     #获取前面一页的url
     def getPrevoiuPageUrl(self,response):
-        xpath_str='//div[@class="pagination"]/ul/li/a[@class="next page-numbers"]/@href'
+        xpath_str='//div[@class="paginator"]/span[@class="next"]/link/@href'
         previousUrlsPath=response.xpath(xpath_str).extract()
         if len(previousUrlsPath):
             html_parser=HTMLParser.HTMLParser()
             page_url_str=html_parser.unescape(previousUrlsPath[0])
-            return self.base_url+page_url_str
+            return page_url_str
         return None
+
 
 
 if __name__=='__main__':

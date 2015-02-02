@@ -36,6 +36,8 @@ class NewsItem(scrapy.Item):
     sourceSiteName=scrapy.Field()
     #网页的tag
     tag=scrapy.Field()
+    #edit_tag
+    edit_tag=scrapy.Field()
     # 内容的地域
     city=scrapy.Field()
 
@@ -158,6 +160,8 @@ class NewsProductItem(scrapy.Item):
     sourceSiteName=scrapy.Field()
     #网页的tag
     tag=scrapy.Field()
+    #edit_tag
+    edit_tag=scrapy.Field()
     #内容的地域
     city=scrapy.Field()
 
@@ -176,7 +180,7 @@ class NewsProductItem(scrapy.Item):
 
     def cloneInfoFromDict(self,dict_obj):
         keys=['_id','title','content','imgUrl','updateTime',
-              'sourceSiteName','description','sourceUrl','tag','city']
+              'sourceSiteName','description','sourceUrl','tag','city','edit_tag']
         if dict_obj==None:
             return
         for key in keys:

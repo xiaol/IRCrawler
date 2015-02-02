@@ -12,8 +12,6 @@ class AllCrawlCommand(ScrapyCommand):
     requires_project = True
     default_settings = {'LOG_ENABLED':False}
 
-
-
     def short_desc(self):
         return "Schedule a run for all available spiders"
 

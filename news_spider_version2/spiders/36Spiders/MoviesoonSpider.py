@@ -1,6 +1,8 @@
 #coding=utf-8
 from news_spider_version2.items import NewsItem, PartialNewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
+from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
+
 
 __author__ = 'galois'
 
@@ -10,47 +12,39 @@ import re
 import HTMLParser
 
 
-class ViceCnSpider(scrapy.Spider):
-    name='viceCnSpider'
-    allowed_domains=['www.vice.cn']
+class MoviesoonSpider(scrapy.Spider):
+    name='moviesonnSpider'
+    allowed_domains=['moviesoon.com']
 
-    start_urls=['http://www.vice.cn/news',
-                'http://www.vice.cn/travel',
-                'http://www.vice.cn/fasion',
-                'http://www.vice.cn/photo',
-                'http://www.vice.cn/noisey',
-                'http://www.vice.cn/tag/漫画']
-    # start_urls=['http://www.vice.cn/fasion']
-
-    base_url="http://www.vice.cn"
+    start_urls=['http://moviesoon.com/news/']
+    # start_urls=['http://moviesoon.com/news/2015/02/the-spongebob-movie-sponge-out-of-water-spoofs-fifty-shades-of-grey-posters/']
 
     root_class='36度'
     #一级分类下面的频道
     default_channel='同步喜好'
      #源网站的名称
-    sourceSiteName='Vice中国'
+    sourceSiteName='影像日报'
 
-    default_tag='有腔调'
+    default_tag='开眼界'
 
-    tag_map={
-        "事儿":"懂生活","旅行":"懂生活",
-        "时尚":"拗造型","摄影":"有腔调",
-        "NOISEY 音乐":"有腔调","漫画":"玩出范"
-    }
+    page_url_pattern=re.compile(r'^http://moviesoon.com/news/\d+')
+    non_page_url_pattern=re.compile(r'^http://moviesoon.com/news')
 
-    page_url_pattern=re.compile(r'^http://www.vice.cn/read/.*')
-    non_page_url_pattern=re.compile(r'^http://www.vice.cn/.*')
-
-    digit_pat=re.compile(r'\d+')
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
 
-    content_pat=re.compile(r'<p>\s*?.+?\s*?</p>')
+    content_pat=re.compile(r'<p>.*?</p>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'<p>\s*?(.+?)\s*?</p>')
+    para_pat=re.compile(r'<p>(.*?)</p>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
     html_parser = HTMLParser.HTMLParser()
+
+    month_map={
+        '一':'01','二':'02','三':'03','四':'04','五':'05',
+        '六':'06','七':'07','八':'08','九':'09','十':'10',
+        '十一':'11','十二':'12'
+    }
 
     def parse(self,response):
         url=response._get_url()
@@ -102,50 +96,44 @@ class ViceCnSpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        title=response.xpath('//h1[@class="entry-title single-title"]/span/text()').extract()[0]
+        xpath_str='//div[@class="post"]/h2/a/text()'
+        title=response.xpath(xpath_str).extract()[0]
         return title
 
     def extractTime(self,response):
-        xpath_str='//div[@class="entry-meta"]/span[@class="entry-date"]/text()'
-        raw_time_str=response.xpath(xpath_str).extract()[0]
-        time=self.formatTime(raw_time_str)
+        xpath_str1='//div[@class="post"]/div[@class="postUst"]/div[@class="postTarih"]/span/text()'
+        day_to_year_arr=response.xpath(xpath_str1).extract()
+        month=day_to_year_arr[1].encode('utf-8')
+        if month in self.month_map:
+            month=self.month_map[month]
+        else:
+            month="01"
+
+        year_to_day_str=day_to_year_arr[2]+"-"+month+"-"+day_to_year_arr[0]+" "
+        xpath_str2='//div[@class="post"]/div[@class="postUst"]/div[@class="postAyrinti"]/p/text()'
+        raw_time_str_arr=response.xpath(xpath_str2).extract()
+        raw_time_str=raw_time_str_arr[-1]
+        hour_to_second=raw_time_str.split(' ')[-1]
+        time=year_to_day_str+hour_to_second
+        print "time is %s" %time
         return time
-
-    def formatTime(self,raw_time):
-        i=0
-        digit_arr=[]
-        for digit in re.findall(self.digit_pat,raw_time):
-            print "the %dth digit is %s" %(i,digit)
-            if len(digit)<2:
-                digit="0"+digit
-            digit_arr.append(digit)
-            if(i<2):
-                digit_arr.append('-')
-            i=i+1
-        digit_arr.append(' ')
-        default_time=CrawlerUtils.getDefaultTimeStr()
-        digit_arr.append(default_time.split(' ')[1])
-        time=''.join(digit_arr)
-        print "the formated time is %s"%time
-        return time
-
-
 
     def extractRootClass(self,response):
         return self.root_class
 
     def extractChannel(self,response,item):
-       return self.default_channel
+        return self.default_channel
 
     def extractContent(self,response):
-        xpath_str='//div[@class="article_content"]'
-        rawContent=response.xpath(xpath_str).extract()[0]
+        xpathStr='//div[@class="post"]/p'
+        rawContentArr=response.xpath(xpathStr).extract()
+        rawContent=''.join(rawContentArr)
         return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
 
 
     def extractImgUrl(self,response):
-        xpath_str='//div[@class="article_content"]'
-        rawContent=response.xpath(xpath_str).extract()
+        xpathStr='//div[@class="post"]'
+        rawContent=response.xpath(xpathStr).extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
@@ -162,32 +150,27 @@ class ViceCnSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
+        # xpath_str='//div[@class="note_upper_footer"]/div[@class="footer-tags"]/a/text()'
+        # tag=response.xpath(xpath_str).extract()
+        # return tag
         tag=[]
-        xpath_str='//div[@class="single-box clearfix entry-content"]/div[@class="entry-meta"]/span[@class="entry-category"]/a/text()'
-        category=response.xpath(xpath_str).extract()[-1].encode('utf-8')
-        if category in self.tag_map:
-             tag.append(self.tag_map[category])
-        else:
-            tag.append(self.default_tag)
+        tag.append(self.default_tag)
         return tag
 
     #获取文章的tag信息
     def extractEditTag(self,response):
-        xpath_str='//div[@class="single-box clearfix entry-content"]/div[@class="entry-meta"]/span[@class="entry-category"]/a/text()'
-        category=response.xpath(xpath_str).extract()[-1].encode('utf-8')
-        if category in self.tag_map:
-            return self.tag_map[category]
-        return self.default_tag
+        # xpath_str='//div[@class="note_upper_footer"]/div[@class="footer-tags"]/a/text()'
+        # tag=response.xpath(xpath_str).extract()
+        # return tag
+       return self.default_tag;
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
-        xpath_str='//article[@class]/figure/a/@href'
+        xpath_str='//div[@id="content"]/div[@class="post"]/a/@href'
         pages_arr=response.xpath(xpath_str).extract()
         request_items=[]
         for elem in pages_arr:
-            page_url=self.base_url+elem
-            print "the page url is %s"%page_url
-            request_items.append(scrapy.Request(page_url,callback=self.parse,dont_filter=False))
+            request_items.append(scrapy.Request(elem,callback=self.parse,dont_filter=False))
 
         non_page_results=[]
         non_page_url=self.getPrevoiuPageUrl(response)
@@ -196,16 +179,15 @@ class ViceCnSpider(scrapy.Spider):
         return non_page_results,request_items
 
 
-    #获取前面一页的url
+     #获取前面一页的url
     def getPrevoiuPageUrl(self,response):
-        xpath_str='//div[@class="pagination"]/ul/li/a[@class="next page-numbers"]/@href'
+        xpath_str='//div[@class="wp-pagenavi"]/a[@class="last"]/@href'
         previousUrlsPath=response.xpath(xpath_str).extract()
         if len(previousUrlsPath):
             html_parser=HTMLParser.HTMLParser()
             page_url_str=html_parser.unescape(previousUrlsPath[0])
-            return self.base_url+page_url_str
+            return page_url_str
         return None
-
 
 if __name__=='__main__':
     # some_interface='http://jandan.duoshuo.com/api/threads/listPosts.json?thread_key=comment-2650694&url=http%3A%2F%2Fjandan.net%2Fooxx%2Fpage-1301%26yid%3Dcomment-2650694&image=http%3A%2F%2Fww1.sinaimg.cn%2Fmw600%2Fa00dfa2agw1enxg54qbbfj20n40x6755.jpg&require=site%2Cvisitor%2Cnonce%2CserverTime%2Clang&site_ims=1420356603&lang_ims=1420356603&v=140327'

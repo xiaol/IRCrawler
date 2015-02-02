@@ -475,4 +475,5 @@ class CrawlerUtils:
                     result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
                     print "txt is :%s" %result
                     listInfos.append({'txt':result})
-        return CrawlerUtils.make_img_text_pair(listInfos)
+        result=CrawlerUtils.make_img_text_pair(listInfos)
+        return result
