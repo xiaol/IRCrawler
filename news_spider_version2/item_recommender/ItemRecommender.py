@@ -28,7 +28,7 @@ class ItemRecommender:
             item_score.append(candidate)
             item_score.append(score)
             candidate_score_pairs.append(item_score)
-        candidate_score_pairs.sort(key=itemgetter(1))
+        candidate_score_pairs.sort(key=itemgetter(1), reverse=True)
         results=[]
         for item in  candidate_score_pairs[0:9]:
             results.append(item[0]['_id'])
