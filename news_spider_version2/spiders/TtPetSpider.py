@@ -27,8 +27,11 @@ class TtPetSpider(scrapy.Spider):
     # start_urls=['http://www.ttpet.com/zixun/71/n-90171.html']
     # start_urls=['http://www.ttpet.com/zixun/07/n-90107.html']
 
-    # start_urls=['http://www.ttpet.com/zixun/85/n-90185.html']
 
+    # start_urls=['http://www.ttpet.com/zixun/85/n-90185.html']
+    # start_urls=['http://www.ttpet.com/zixun/16/n-90216.html']
+    # start_urls=['http://www.ttpet.com/zixun/13/n-90213.html']
+    # start_urls=['http://www.ttpet.com/zixun/25/n-90225.html']
     root_class='36度'
     #一级分类下面的频道
     default_channel='暖心'
@@ -51,7 +54,8 @@ class TtPetSpider(scrapy.Spider):
     digital_pat=re.compile(r'\d+')
     content_pat=re.compile(r'<p.*?</p>|.*?<br>',re.DOTALL)  #|.*?</div>
     # content_pat=re.compile(r'<p.*?</p>|.*?<br>|<div class="p_text">.*?<br>\s*?<p>|<img.*?src=".*?" alt="">',re.DOTALL)
-    img_pat=re.compile(r'<img.*?src="(.*?)" alt="">')
+    img_pat=re.compile(r'<img.*?src="(.*?\.jpg)"\s*?.*?>')
+    # <img src="http://img.ttpet.com/zixun/item/90225/content/resize_1423206347.jpg" alt="">
     # para_pat=re.compile(r'<p.*?>(.*?)</p>|<div class="p_text">(.*?)<br>\s*?<p>',re.DOTALL)
     para_pat=re.compile(r'<p.*?>(.*?)</p>|(.*?)<br>|(.*?)</div>',re.DOTALL)
     previous_page_pat=re.compile(r'<a\s*?href="([^>^<]*?)" title="([^<^>]*?) class="next">')
