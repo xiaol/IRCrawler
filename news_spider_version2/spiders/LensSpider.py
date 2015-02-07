@@ -25,7 +25,7 @@ class LensSubzeroSpider(scrapy.Spider):
 
     # start_urls=['http://www.lensmagazine.com.cn/category/reporting/special-topic']
     # start_urls=['http://www.lensmagazine.com.cn/reporting/special-topic/10703.html']
-
+    # start_urls=['http://www.lensmagazine.com.cn/reporting/focus/3141.html']
 
     root_class='-40度'
     #一级分类下面的频道
@@ -50,7 +50,8 @@ class LensSubzeroSpider(scrapy.Spider):
     digital_pat=re.compile(r'\d+')
 
     content_pat=re.compile(r'<p>.*?\s*?</p>',re.DOTALL)
-    img_pat=re.compile(r'<img\s*?class=".+?"\s*?alt=".*?"\s*?src="(.*?)"\s*?width="\d+"\s*?height="\d+">')
+    # img_pat=re.compile(r'<img\s*?class=".+?"\s*?alt=".*?"\s*?src="(.*?)"\s*?width="\d+"\s*?height="\d+">')
+    img_pat=re.compile(r'<img.*?src="(http://www\.lensmagazine\.com\.cn.*?\.jpg)".*?>')
     para_pat=re.compile(r'<p>(.*?)\s*?</p>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')

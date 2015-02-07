@@ -26,7 +26,7 @@ class TtPetSpider(scrapy.Spider):
     start_urls=['http://www.ttpet.com/zixun/39/category-catid-39.html']
     # start_urls=['http://www.ttpet.com/zixun/71/n-90171.html']
     # start_urls=['http://www.ttpet.com/zixun/07/n-90107.html']
-  
+
     # start_urls=['http://www.ttpet.com/zixun/85/n-90185.html']
 
     root_class='36度'
