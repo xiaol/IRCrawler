@@ -22,7 +22,7 @@ class CityTencentSpider(scrapy.Spider):
                 'http://zj.qq.com/news','http://ln.qq.com/news','http://js.qq.com/news/index.html'
     ]
 
-    # start_urls=['http://js.qq.com/a/20150115/009690.htm']
+    start_urls=['http://sh.qq.com/a/20150209/008426.htm']
 
     root_class='36度'
     #一级分类下面的频道
@@ -41,7 +41,8 @@ class CityTencentSpider(scrapy.Spider):
 
     content_pat=re.compile(r'<p(?: .*?)?>.*?</p>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'<p style="TEXT-INDENT.*?">(.+?)</p>')
+    # para_pat=re.compile(r'<p style="(?:TEXT-INDENT|text-indent).*?">(.+?)</p>')
+    para_pat=re.compile(r'<p(?: .*?)?>(.+?)</p>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
     city_str_pat=re.compile(r'http://(\w+)\.')

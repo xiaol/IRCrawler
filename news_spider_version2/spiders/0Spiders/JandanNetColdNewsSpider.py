@@ -20,7 +20,7 @@ class JandanColdNewsSpider(scrapy.Spider):
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
                 'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
-    # start_urls=['http://jandan.net/tag/%E7%AC%A8%E8%B4%BC']
+    start_urls=['http://jandan.net/2015/02/06/matrix-fun-facts.html']
     #
 
     root_class='0度'
@@ -39,9 +39,9 @@ class JandanColdNewsSpider(scrapy.Spider):
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p>.*?</p>')
+    content_pat=re.compile(r'<p>.*?</p>|<h4>.*?</h4>')
     img_pat=re.compile(r'<p>\s*?<img(?: .*?)? src="(.*?)"(?: .*?)?></p>')
-    para_pat=re.compile(r'<p>([^<>]+?)</p>')
+    para_pat=re.compile(r'<p>(.+?)</p>|<h4>(.+?)</h4>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
 

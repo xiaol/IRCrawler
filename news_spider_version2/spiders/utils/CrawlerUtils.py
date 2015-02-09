@@ -8,10 +8,11 @@ import re
 import datetime
 import sys
 import HTMLParser
+reload(sys) # Python2.5 初始化后会删除 sys.setdefaultencoding 这个方法，我们需要重新载入
+sys.setdefaultencoding('utf-8')
 
 class CrawlerUtils:
-    reload(sys) # Python2.5 初始化后会删除 sys.setdefaultencoding 这个方法，我们需要重新载入
-    sys.setdefaultencoding('utf-8')
+
 
     SPACES_PATTERN=re.compile(ur'^[\s\xa0\u3000]*$')
     SPECIAL_SPACE=re.compile(ur'[\xa0\s]*')
@@ -411,12 +412,19 @@ class CrawlerUtils:
                 if base_url!=None:
                     img_url=base_url+img_url
                 listInfos.append({'img':img_url})
-                print "img is %s" %img_url
+                print "img is: %s" %img_url
             else:
                 line=cls.html_parser.unescape(line)
+
                 txtSearch=re.search(para_pat,line)
                 if txtSearch:
-                    result=txtSearch.group(1)
+                    result=None
+                    groups=txtSearch.groups()
+                    for group in groups:
+                        if group:
+                            result=group
+                    if None==result:
+                        continue
                     result=CrawlerUtils.removeParasedCode(result)
                     result=CrawlerUtils.removeScript(result)
                     result=CrawlerUtils.removeUnwantedTag(result)

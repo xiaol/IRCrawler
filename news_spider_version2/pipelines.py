@@ -35,6 +35,8 @@ class NewsSpiderVersion2Pipeline(object):
                 return item
             if None==item['content']:
                 return item
+            if len(item['content'])==0:
+                return item
             item_dict=dict(item)
             self.collection.save(item_dict)
             self.scrappedColl.save(scrapedItem)

@@ -19,7 +19,7 @@ class MongoUtils:
     r_alias=['-40度','0度','36度','40度']
     r_name=['你未见的时代冰点','你不知道的冷新闻','同步你的关注热度','触摸时下热点']
     ch_infos=[
-        [{'ch_id':0,'ch_name':'一个关注打破冰封','alias':'冰封'},
+        [{'ch_id':0,'ch_name':'让坚冰在这里消融','alias':'冰封'},
          {'ch_id':1,'ch_name':'镜头抽离改变了谁','alias':'镜头'}],
 
         [{'ch_id':0,'ch_name':'不妨看点儿冷新闻','alias':'冷新闻'},
@@ -48,7 +48,9 @@ class MongoUtils:
     #返回item的 root_id ,root_name,channel_id,channel_name
     @classmethod
     def findRootInfo(cls,root_alias,ch_alias):
-        filt={'alias':root_alias}
+        u_root_alias=root_alias.decode('utf-8')
+        u_ch_alias=ch_alias.decode('utf-8')
+        filt={'alias':u_root_alias}
         info=cls.root_info_coll.find_one(filt)
         if info==None:
             return None,None,None,None
@@ -56,7 +58,7 @@ class MongoUtils:
         r_name=info['r_name']
         list_chs=info['channelInfos']
         for ch_info in list_chs:
-            if ch_alias==ch_info['alias']:
+            if u_ch_alias==ch_info['alias']:
                 return rid,r_name,ch_info['ch_id'],ch_info['ch_name']
 
 

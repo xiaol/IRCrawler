@@ -59,3 +59,6 @@ COMMANDS_MODULE='news_spider_version2.commands'
 # # 设置redis 连接地址
 # REDIS_HOST = '60.28.29.39'
 # REDIS_PORT = 6379
+
+# 设置PHANTOM服务地址
+PHANTOM_LINK='http://127.0.0.1:8080/wd/hub'
