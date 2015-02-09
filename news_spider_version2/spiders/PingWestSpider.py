@@ -3,8 +3,7 @@ __author__ = 'yangjiwen'
 import json
 from news_spider_version2.items import NewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
-
-
+import datetime
 import scrapy
 import re
 import time
@@ -30,13 +29,12 @@ class PingWestSpider(scrapy.Spider):
 
 
 
-
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
     start_urls=['http://www.pingwest.com/','http://www.pingwest.com/category/news/']
     # start_urls=['http://www.pingwest.com/category/news/']
-
-
+    # start_urls=['http://www.pingwest.com/pw-2015-2-6/']
+    # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
     root_class='40度'
     #一级分类下面的频道
     default_channel='数码科技'
@@ -59,8 +57,9 @@ class PingWestSpider(scrapy.Spider):
     time_pat=re.compile(r'<span class="post-time">(.*?)</span>',re.DOTALL)
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p.*?</p>',re.DOTALL)
-    img_pat=re.compile(r'<img.*?src="(.*?)".*?>')
+    content_pat=re.compile(r'<p.*?</p>|<div class="post-img".*?http://cdn\.pingwest\.com.*?\.jpg\)">',re.DOTALL)
+    # img_pat=re.compile(r'<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
+    img_pat=re.compile(r'<img.*?src="(.*?)".*?>|<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
     para_pat=re.compile(r'<p.*?>(.*?)</p>')
 
     previous_page_pat=re.compile(r'<a class="next page-numbers" href="([^"]*?)">')
@@ -135,22 +134,46 @@ class PingWestSpider(scrapy.Spider):
 
     def extractTime(self,response):
 
-        # raw_time_str=response.xpath('//div[@class="post-meta"]/div[@class="autor-meta"]').extract()
-        # print "raw,%s"%raw_time_str
-        # searchResult=re.search(self.time_pat,str(raw_time_str))
-        # if searchResult:
-        #     time=searchResult.group(1)
-        #     time=time.decode('utf8')
-        #     if time.endswith('小时前'):
-        #         print "hello"
-        #
-        #
-        #     # if time.endswith('\u5c0f\u65f6\u524d'):
-        #     #     time.replace('\u5c0f\u65f6\u524d','小时前')
-        #     #
-        #     print "time,%s"%time
-        #     return self.formatTime(time)
-        return CrawlerUtils.getDefaultTimeStr()
+        raw_time_str=response.xpath('//div[@class="post-meta"]/div[@class="autor-meta"]').extract()
+        print "raw,%s"%raw_time_str
+        searchResult=re.search(self.time_pat,str(raw_time_str))
+        if searchResult:
+            time=searchResult.group(1)
+            timestr=time.decode('unicode-escape')
+            timestr=timestr.encode('utf8')
+            digitals=re.findall(self.digital_pat,timestr)
+            format='%Y-%m-%d %H:%M:%S'
+            # timeDelta=datetime.timedelta(milliseconds=3600*1000)
+            # defaultTime=(datetime.datetime.now()-timeDelta)
+            # defaultTimeStr=defaultTime.strftime(format)
+            # return defaultTimeStr
+            if  timestr.endswith('小时前'):
+                timeDelta=datetime.timedelta(milliseconds=3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+            elif timestr.endswith('天前'):
+                timeDelta=datetime.timedelta(milliseconds=24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+            elif timestr.endswith('周前'):
+                timeDelta=datetime.timedelta(milliseconds=7*24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+
+            elif timestr.endswith('月前'):
+                timeDelta=datetime.timedelta(milliseconds=4*7*24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+            elif timestr.endswith('年前'):
+                timeDelta=datetime.timedelta(milliseconds=12*4*7*24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+            else:
+                return CrawlerUtils.getDefaultTimeStr()
+
+            defaultTimeStr=defaultTime.strftime(format)
+            return defaultTimeStr
+
+
      # 2015-01-07 11:50:09
     def formatTime(self,timeStr):
         digitals=re.findall(self.digital_pat,timeStr)
@@ -191,7 +214,7 @@ class PingWestSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@id="sc-container"]').extract()[0]
+        rawContent=response.xpath('//article[@class="post-article"]').extract()[0]
         if not len(rawContent):
             return None
         listInfos=[]
@@ -204,8 +227,8 @@ class PingWestSpider(scrapy.Spider):
             if imgSearch:
                 for img in imgSearch:
                     # img=re.search(self.img_pat,img)
-                    listInfos.append({'img':img})
-                    print "img is %s" %img
+                    listInfos.append({'img':''.join(list(img))})
+                    print "img is %s" %''.join(list(img))
 
             txtSearch=re.search(self.para_pat,line)
             # txtSearch=rawContent.xpath('/div/text()')
@@ -224,14 +247,20 @@ class PingWestSpider(scrapy.Spider):
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
-        rawContent=response.xpath('//div[@id="sc-container"]').extract()
+        rawContent=response.xpath('//article[@class="post-article"]').extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.img_pat,line)
+            imgSearch=re.findall(self.img_pat,line)
             if imgSearch:
-                print "imgsearch,%s"%imgSearch
-                return imgSearch.group(1)
+                for img in imgSearch:
+                    # img=re.search(self.img_pat,img)
+                    return ''.join(list(img))
+
+            # imgSearch=re.search(self.img_pat,line)
+            # if imgSearch:
+            #     print "imgsearch,%s"%imgSearch
+            #     return imgSearch.group(0)
         return None
 
     def extractDesc(self,response):
@@ -247,7 +276,7 @@ class PingWestSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
-        tag=response.xpath('//div[@class="newsl"]/div[@class="newskeyword clearfix lh18"]/a/text()').extract()
+        tag=response.xpath('//div[@class="post-tags"]/a/text()').extract()
         print "tag,%s"%tag
         return tag
 
