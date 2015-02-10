@@ -10,16 +10,20 @@ import scrapy
 import re
 
 import HTMLParser
+from scrapy.utils.url import canonicalize_url
+import hashlib
+
 
 
 class DapentiSpider(scrapy.Spider):
+
     name='dapentiSpider'
     allowed_domains=['www.dapenti.com']
 
     start_urls=['http://www.dapenti.com/blog/blog.asp?name=agile',
                 'http://www.dapenti.com/blog/blog.asp?subjectid=2&name=xilei',
                ]
-    start_urls=['http://www.dapenti.com/blog/more.asp?name=xilei&id=31412']
+    # start_urls=['http://www.dapenti.com/blog/more.asp?name=xilei&id=24479']
 
     root_class='36度'
     #一级分类下面的频道
@@ -51,7 +55,7 @@ class DapentiSpider(scrapy.Spider):
     edit_tag_pat=re.compile(r'\?name=(.*?)&')
     base_url='http://www.dapenti.com/blog/'
     digit_pat=re.compile(r'\d+')
-    update_time_pat=re.compile(r'<DIV align=right><SPAN>(.*?)</SPAN></DIV>')
+    update_time_pat=re.compile(r'<DIV align=right><SPAN(?: .*?)?>(.*?)</SPAN></DIV>')
 
     def parse(self,response):
         url=response._get_url()
@@ -100,7 +104,9 @@ class DapentiSpider(scrapy.Spider):
 
 
     def generateItemId(self,item):
-        return item['sourceUrl']
+        fp = hashlib.sha1()
+        fp.update(item['sourceUrl'])
+        return fp.hexdigest()
 
     def extractTitle(self,response):
         xpath_str='//title/text()'
@@ -131,6 +137,7 @@ class DapentiSpider(scrapy.Spider):
                 time_arr.append(' ')
             elif i<5:
                 time_arr.append(':')
+            i=i+1
         time=''.join(time_arr)
         return time
 
@@ -146,6 +153,7 @@ class DapentiSpider(scrapy.Spider):
         search_result=re.search(self.main_text_pat,body)
         if search_result:
             rawContent=search_result.group(1)
+            rawContent=unicode(rawContent,'gbk').encode()
             return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
         return None
 

@@ -1,6 +1,8 @@
 #coding=utf-8
+import hashlib
 import urllib2
 import charade
+from scrapy.utils.url import canonicalize_url
 
 __author__ = 'galois'
 
@@ -291,7 +293,8 @@ class CrawlerUtils:
     def isAllSpaces(cls,test_str):
         if test_str==None:
             return True
-        if re.match(cls.SPACES_PATTERN,test_str.decode('utf-8')):
+        # test_str=unicode(test_str)
+        if re.match(cls.SPACES_PATTERN,test_str.decode(errors='ignore')):
             return True
         return False
 
@@ -414,7 +417,6 @@ class CrawlerUtils:
                 listInfos.append({'img':img_url})
                 print "img is: %s" %img_url
             else:
-                line=cls.html_parser.unescape(line)
 
                 txtSearch=re.search(para_pat,line)
                 if txtSearch:
@@ -425,9 +427,11 @@ class CrawlerUtils:
                             result=group
                     if None==result:
                         continue
+
                     result=CrawlerUtils.removeParasedCode(result)
                     result=CrawlerUtils.removeScript(result)
                     result=CrawlerUtils.removeUnwantedTag(result)
+                    result=cls.html_parser.unescape(result)
                     if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
                         print "txt is :%s" %result
@@ -472,16 +476,21 @@ class CrawlerUtils:
                     img_url=base_url+img_url
                 listInfos.append({'img':img_url})
                 print "img is %s" %img_url
-            line=cls.html_parser.unescape(line)
             txtSearch=re.search(para_pat,line)
             if txtSearch:
                 result=txtSearch.group(1)
                 result=CrawlerUtils.removeParasedCode(result)
                 result=CrawlerUtils.removeScript(result)
                 result=CrawlerUtils.removeUnwantedTag(result)
+                result=cls.html_parser.unescape(result)
                 if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                     result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
                     print "txt is :%s" %result
                     listInfos.append({'txt':result})
         result=CrawlerUtils.make_img_text_pair(listInfos)
         return result
+    @classmethod
+    def generateId(cls,url):
+        fp = hashlib.sha1()
+        fp.update(canonicalize_url(url))
+        return fp.hexdigest()
