@@ -20,7 +20,7 @@ class JandanColdNewsSpider(scrapy.Spider):
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
                 'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
-    start_urls=['http://jandan.net/2015/02/06/matrix-fun-facts.html']
+    # start_urls=['http://jandan.net/2015/02/06/matrix-fun-facts.html']
     #
 
     root_class='0度'
@@ -39,8 +39,8 @@ class JandanColdNewsSpider(scrapy.Spider):
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p>.*?</p>|<h4>.*?</h4>')
-    img_pat=re.compile(r'<p>\s*?<img(?: .*?)? src="(.*?)"(?: .*?)?></p>')
+    content_pat=re.compile(r'<p>.*?</p>|<h4>.*?</h4>',re.DOTALL)
+    img_pat=re.compile(r'<p>\s*?<img(?: .*?)? src="(.*?)"(?: [^<>]+?)?>.*?</p>',re.DOTALL)
     para_pat=re.compile(r'<p>(.+?)</p>|<h4>(.+?)</h4>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
@@ -145,25 +145,26 @@ class JandanColdNewsSpider(scrapy.Spider):
         rawContent=response.xpath('//div[@class="post f"]').extract()
         if not len(rawContent):
             return None
-        listInfos=[]
+        return CrawlerUtils.extractContentImgTxtMixture(rawContent[0],self.content_pat,self.img_pat,self.para_pat)
+        # listInfos=[]
 
-        for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.img_pat,line)
-            if imgSearch:
-                listInfos.append({'img':imgSearch.group(1)})
-                # print "img is %s" %imgSearch.group(1)
-            else:
-                txtSearch=re.search(self.para_pat,line)
-                if txtSearch:
-                    result=txtSearch.group(1)
-                    result=CrawlerUtils.removeParasedCode(result)
-                    result=CrawlerUtils.removeScript(result)
-                    result=CrawlerUtils.removeUnwantedTag(result)
-                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
-                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                        # print "txt is :%s" %result
-                        listInfos.append({'txt':result})
-        return CrawlerUtils.make_img_text_pair(listInfos)
+        # for line in re.findall(self.content_pat,rawContent[0]):
+        #     imgSearch=re.search(self.img_pat,line)
+        #     if imgSearch:
+        #         listInfos.append({'img':imgSearch.group(1)})
+        #         # print "img is %s" %imgSearch.group(1)
+        #     else:
+        #         txtSearch=re.search(self.para_pat,line)
+        #         if txtSearch:
+        #             result=txtSearch.group(1)
+        #             result=CrawlerUtils.removeParasedCode(result)
+        #             result=CrawlerUtils.removeScript(result)
+        #             result=CrawlerUtils.removeUnwantedTag(result)
+        #             if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+        #                 result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+        #                 # print "txt is :%s" %result
+        #                 listInfos.append({'txt':result})
+        # return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
         rawContent=response.xpath('//div[@class="post f"]').extract()

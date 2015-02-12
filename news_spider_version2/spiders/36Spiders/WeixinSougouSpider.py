@@ -19,8 +19,7 @@ class WeixinSougouSpider(scrapy.Spider):
                 ]
 
     # start_urls=['http://weixin.sogou.com/gzh?openid=oIWsFt-W8WxV7WDe0nnGz1SlLzwE&sourceid=weixinv']
-    # start_urls=['http://mp.weixin.qq.com/s?__biz=MjM5MDM4MDExNQ==&mid=209232805&idx=1&sn=51d3c72d49f13e1552d743a0ef07a7d1&3rd=MzA3MDU4NTYzMw==&scene=6#rd']
-
+    # start_urls=['http://mp.weixin.qq.com/s?__biz=MjM5MDM4MDExNQ==&mid=209357872&idx=1&sn=497b72bdc0f85c9be2f7abdd11917541&3rd=MzA3MDU4NTYzMw==&scene=6']
     root_class='36度'
     #一级分类下面的频道
     default_channel='同步喜好'
@@ -39,15 +38,19 @@ class WeixinSougouSpider(scrapy.Spider):
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
     digital_pat=re.compile(r'\d+')
 
-    img_pat=re.compile(r'<img(?: .*?)? (?:data-)?src="(.*?)"(?: .*?)?>',re.DOTALL)
-    content_pat=re.compile(r'<p(?: .*?)?>.*?</p>|<section(?: .*?)? class="tn-Powered-by-XIUMI"(?: .*?)?>.*?</section>|<img(?: .*?)? (?:data-)?src=".*?"(?: .*?)?>',re.DOTALL)
-    para_pat=re.compile(r'<p(?: .*?)?>(.*?)</p>|<section(?: .*?)? class="tn-Powered-by-XIUMI"(?: .*?)?>(.*?)</section>')
+    img_pat=re.compile(r'<img(?: [^<>]+?)? (?:data-)?src="(.*?)"(?: [^<>]+?)?>',re.DOTALL)
+    content_pat=re.compile(r'<p(?: [^<>]+?)?>.*?</p>|<section(?: [^<>]+?)? class="tn-Powered-by-XIUMI"(?: [^<>]+?)?>.*?</section>|<img(?: [^<>]+?)? (?:data-)?src=".*?"(?: [^<>]+?)?>',re.DOTALL)
+    para_pat=re.compile(r'<p(?: [^<>]+?)?>(.*?)</p>|<section(?: [^<>]+?)? class="tn-Powered-by-XIUMI"(?: [^<>]+?)?>(.*?)</section>')
 
     thumbnail_view_img=re.compile(r'var\s+cover\s*?=\s*?"(.*?)"')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
     html_parser = HTMLParser.HTMLParser()
+    filt_img=['http://mmbiz.qpic.cn/mmbiz/hFB4FUPIIlLTndfy64ic1PicQoGflpndIS3YI08LMC1WnFAHibIJlXEo61xgic6H8rcuPFr7Pw8Atiapcw4RKmXMBhQ/0',
+              'http://mmbiz.qpic.cn/mmbiz/hFB4FUPIIlLTndfy64ic1PicQoGflpndISTKyibkbfsEsEvTqg6IiadPdFPBw2VLHH1PzKZx1sbsCsCNtDD54Xuv3w/0',
+              'http://mmbiz.qpic.cn/mmbiz/hFB4FUPIIlLTndfy64ic1PicQoGflpndIS12r6La2veBakyfWneia37jibQgCcOWBxNuojvm26q3xLnhWMZf724kNQ/0',
+              'http://mmbiz.qpic.cn/mmbiz/aoLjFpe7tpicmh6NH2ZSyZMvPiamStibeoWXYRzPabjePTNK0b4LQ0zIYqgPibFHicviaCj4RPhHDAUkQTtuKvXRgQ7Q/0']
 
     def start_requests(self):
         urls=set([])
@@ -152,18 +155,14 @@ class WeixinSougouSpider(scrapy.Spider):
         xpath_str='//div[@id="js_content"]'
         rawContent=response.xpath(xpath_str).extract()[0]
         # rawContent='<fieldset style="border: 0px; box-sizing: border-box; width: 100%; margin: 0.8em 0px 0.2em; clear: both; padding: 0px;" class="tn-Powered-by-XIUMI"><img style="box-sizing: border-box; width: 100% !important; visibility: visible !important; height: auto !important;" data-src="http://mmbiz.qpic.cn/mmbiz/hFB4FUPIIlKAyfaFgyBVvLrNDaAic0UCW7f93yg9jV8bHWQvHlCibtWAiaDvdwSE1Ya0CmQKFXkJwOblWEsvSl4YA/0" class="tn-Powered-by-XIUMI" id="c1423040231618" data-type="png" data-ratio="0.6732283464566929" data-w="508" _width="100%" src="http://mmbiz.qpic.cn/mmbiz/hFB4FUPIIlKAyfaFgyBVvLrNDaAic0UCW7f93yg9jV8bHWQvHlCibtWAiaDvdwSE1Ya0CmQKFXkJwOblWEsvSl4YA/0?tp=webp&amp;wxfrom=5"></fieldset>'
-        return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
+        return CrawlerUtils.extractContentImgTxtMixture(rawContent,self.content_pat,self.img_pat,
+                                                        self.para_pat,filt_imgs=self.filt_img)
 
 
     def extractImgUrl(self,response):
-        xpath_str='//div[@id="media"]'
-        rawContent=response.xpath(xpath_str).extract()
-        if not len(rawContent):
-            return None
-        searchResult=re.search(self.thumbnail_view_img,rawContent[0])
-        if searchResult:
-            return searchResult.group(1)
-        return None
+        xpath_str='//div[@id="js_content"]'
+        rawContent=response.xpath(xpath_str).extract()[0]
+        return CrawlerUtils.extractImgUrl(rawContent,self.content_pat,self.img_pat,filt_imgs=self.filt_img)
 
     def extractDesc(self,response):
         return None

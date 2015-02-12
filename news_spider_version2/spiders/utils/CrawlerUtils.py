@@ -405,7 +405,7 @@ class CrawlerUtils:
             return None
 
     @classmethod
-    def extractContent(cls,rawContent,content_pat,img_pat,para_pat,base_url=None):
+    def extractContent(cls,rawContent,content_pat,img_pat,para_pat,base_url=None,filt_imgs=None):
         listInfos=[]
 
         for line in re.findall(content_pat,rawContent):
@@ -425,6 +425,7 @@ class CrawlerUtils:
                     for group in groups:
                         if group:
                             result=group
+                            break
                     if None==result:
                         continue
 
@@ -465,20 +466,30 @@ class CrawlerUtils:
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     @classmethod
-    def extractContentImgTxtMixture(cls,rawContent,content_pat,img_pat,para_pat,base_url=None):
+    def extractContentImgTxtMixture(cls,rawContent,content_pat,img_pat,para_pat,base_url=None,filt_imgs=None):
         listInfos=[]
 
         for line in re.findall(content_pat,rawContent):
-            imgSearch=re.search(img_pat,line)
-            if imgSearch:
-                img_url=imgSearch.group(1)
+            for img in re.findall(img_pat,line):
+                img_url=img
                 if base_url!=None:
                     img_url=base_url+img_url
-                listInfos.append({'img':img_url})
-                print "img is %s" %img_url
+                if None==filt_imgs:
+                    listInfos.append({'img':img_url})
+                    print "img is %s" %img_url
+                elif not img_url in filt_imgs:
+                    listInfos.append({'img':img_url})
+                    print "img is %s" %img_url
+
             txtSearch=re.search(para_pat,line)
             if txtSearch:
-                result=txtSearch.group(1)
+                groups=txtSearch.groups()
+                for group in groups:
+                    if group:
+                        result=group
+                        break
+                if None==result:
+                    continue
                 result=CrawlerUtils.removeParasedCode(result)
                 result=CrawlerUtils.removeScript(result)
                 result=CrawlerUtils.removeUnwantedTag(result)
@@ -494,3 +505,17 @@ class CrawlerUtils:
         fp = hashlib.sha1()
         fp.update(canonicalize_url(url))
         return fp.hexdigest()
+
+    @classmethod
+    def extractImgUrl(cls,rawContent,content_pat,img_pat,base_url=None,filt_imgs=None):
+
+        for line in re.findall(content_pat,rawContent):
+            for img in re.findall(img_pat,line):
+                img_url=img
+                if base_url!=None:
+                    img_url=base_url+img_url
+                if None==filt_imgs:
+                    return img_url
+                elif not img_url in filt_imgs:
+                    return img_url
+        return None
