@@ -10,6 +10,7 @@ from scrapy.conf import settings
 from pymongo import ReadPreference
 from news_spider_version2.item_recommender.ItemRecommender import ItemRecommender
 from news_spider_version2.items import NewsItem, PartialNewsItem, NewsProductItem, SimilarItem
+from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
 
 
@@ -28,20 +29,31 @@ class NewsSpiderVersion2Pipeline(object):
 
     def process_item(self, item, spider):
         if type(item) is NewsItem:
-            scrapedItem={'_id':item['_id']}
+            id=item['_id']
+            scrapedItem={'_id':id}
             if self.scrappedColl.find_one(scrapedItem):
                 log.msg("Item %s alread exists in  database " %(item['_id']),
                     level=log.DEBUG, spider=spider)
                 return item
+            if id.startswith('http'):
+                id=CrawlerUtils.generateId(id)
+                scrapedItem={'_id':id}
+                if self.scrappedColl.find_one(scrapedItem):
+                    log.msg("Item %s alread exists in  database " %(item['_id']),
+                        level=log.DEBUG, spider=spider)
+                    return item
             if None==item['content']:
                 return item
+            if len(item['content'])==0:
+                return item
             item_dict=dict(item)
+            item_dict['_id']=id
             self.collection.save(item_dict)
             self.scrappedColl.save(scrapedItem)
             log.msg("Item wrote to MongoDB database %s/%s" %(settings['MONGODB_DB'], settings['MONGODB_COLLECTION']),
                     level=log.DEBUG, spider=spider)
             similarItem=SimilarItem()
-            similarItem['_id']=item['_id']
+            similarItem['_id']=id
             recommend_items=ItemRecommender.recommend_by_item(item)
             similarItem['similar_items']=recommend_items
             self.item_to_item_collection.save(dict(similarItem))
