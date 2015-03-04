@@ -53,7 +53,7 @@ class NewsSpiderVersion2Pipeline(object):
             log.msg("Item wrote to MongoDB database %s/%s" %(settings['MONGODB_DB'], settings['MONGODB_COLLECTION']),
                     level=log.DEBUG, spider=spider)
             similarItem=SimilarItem()
-            similarItem['_id']=item['_id']
+            similarItem['_id']=id
             recommend_items=ItemRecommender.recommend_by_item(item)
             similarItem['similar_items']=recommend_items
             self.item_to_item_collection.save(dict(similarItem))
