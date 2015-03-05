@@ -35,6 +35,10 @@ class PingWestSpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/category/news/']
     # start_urls=['http://www.pingwest.com/pw-2015-2-6/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
+    # start_urls=['http://www.pingwest.com/10-richest-tech-guy/']
+    # start_urls=['http://www.pingwest.com/chris-sacca-cant-wait-for-the-tech-bubble-to-burst/']
+    # start_urls=['http://www.pingwest.com/alibaba-taiwan/']
+
     root_class='40度'
     #一级分类下面的频道
     default_channel='数码科技'
@@ -57,9 +61,9 @@ class PingWestSpider(scrapy.Spider):
     time_pat=re.compile(r'<span class="post-time">(.*?)</span>',re.DOTALL)
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p.*?</p>|<div class="post-img".*?http://cdn\.pingwest\.com.*?\.jpg\)">',re.DOTALL)
+    content_pat=re.compile(r'<p.*?</p>|<div class="post-img".*?http://cdn\.pingwest\.com.*?\.jpg\)">|<li><a.*?pic=http://cdn.pingwest\.com/.*?.jpg')
     # img_pat=re.compile(r'<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
-    img_pat=re.compile(r'<img.*?src="(.*?)".*?>|<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
+    img_pat=re.compile(r'<img.*?src="(http://cdn\.pingwest\.com.*?)".*?>|<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">|<li><a.*?pic=(http://cdn.pingwest\.com/.*?.jpg)')
     para_pat=re.compile(r'<p.*?>(.*?)</p>')
 
     previous_page_pat=re.compile(r'<a class="next page-numbers" href="([^"]*?)">')
