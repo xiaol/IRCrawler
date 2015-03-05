@@ -18,7 +18,7 @@ class ItemRecommender:
     def recommend_by_item(cls,item):
         root_class=item['root_class']
         channel=item['channel']
-        candidates=cls.getItems(root_class,channel,1000)
+        candidates=cls.getItems(item['_id'],root_class,channel,1000)
 
         candidate_score_pairs=[]
 
@@ -36,8 +36,8 @@ class ItemRecommender:
 
 
     @classmethod
-    def getItems(cls,root_class,channel,num):
-        docs = cls.collection.find({"root_class": root_class,"channel":channel}).sort([("updateTime", -1)]).limit(num)
+    def getItems(cls,id,root_class,channel,num):
+        docs = cls.collection.find({'_id':{'$ne':id},"root_class": root_class,"channel":channel}).sort([("updateTime", -1)]).limit(num)
         return docs
 
     def main(self):
