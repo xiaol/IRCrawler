@@ -24,8 +24,9 @@ class TvFantasySpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
     start_urls=['http://tvfantasy.net/']
+    start_urls=['http://tvfantasy.net/index.php?s=%E8%A6%81%E9%97%BB&submit.x=0&submit.y=0']
     # start_urls=['http://tvfantasy.net/2015/01/25/mini-series-sons-of-liberty-premiere/']
-
+    # start_urls=['http://tvfantasy.net/2015/03/05/todays-tv-news-guide-2015-03-05/']
 
     root_class='40度'
     #一级分类下面的频道
@@ -52,7 +53,8 @@ class TvFantasySpider(scrapy.Spider):
     img_pat=re.compile(r'<img.*?src="(.*?)">')
     para_pat=re.compile(r'<p.*?>(.*?)</p>',re.DOTALL)
 
-    previous_page_pat=re.compile(r'<a\s*?href="(http://tvfantasy.net/[^>^<]*?)" class="emm-next">\\xbb</a>')
+    # previous_page_pat=re.compile(r'<a\s*?href="(http://tvfantasy.net/[^>^<]*?)" class="emm-next">\\xbb</a>')
+    previous_page_pat=re.compile(r'<a\s*?href="(/index.php[^>^<]*?)" class="emm-next">\\xbb</a>')
     nonpage_url_pat=re.compile(r'<a class="trueblack" href="(http://tvfantasy.net/\d+/.*?)" .*?rel="bookmark">')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
     end_content_str='文章标签'
@@ -117,7 +119,7 @@ class TvFantasySpider(scrapy.Spider):
             title=searchResult1.group(1)
             # title=searchResult1.group(1)
             title=CrawlerUtils.removeUnwantedTag(title)
-
+            title=title.replace('要闻：','')
             return title
         return None
 
@@ -278,7 +280,7 @@ class TvFantasySpider(scrapy.Spider):
             page_url_str=searchResult.group(1)
 
             if page_url_str:
-
+                page_url_str='http://tvfantasy.net'+page_url_str
                 print "privious page's url is %s " %page_url_str
                 return page_url_str
         return None
