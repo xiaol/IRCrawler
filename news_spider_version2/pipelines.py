@@ -37,6 +37,7 @@ class NewsSpiderVersion2Pipeline(object):
                 return item
             if id.startswith('http'):
                 id=CrawlerUtils.generateId(id)
+                item['_id']=id
                 scrapedItem={'_id':id}
                 if self.scrappedColl.find_one(scrapedItem):
                     log.msg("Item %s alread exists in  database " %(item['_id']),
