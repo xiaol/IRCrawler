@@ -11,9 +11,10 @@ class ADayMagSpider(scrapy.Spider):
     name='ADayMagSpider'
     allowed_domains=['www.adaymag.com']
 
-    start_urls=['http://www.adaymag.com/worldpost/fun/','http://www.adaymag.com/worldpost/heartwarming/',
-                'http://www.adaymag.com/lifestyle/pet/','http://www.adaymag.com/kids/']
-    # start_urls=['http://www.adaymag.com/worldpost/fun/']
+    # start_urls=['http://www.adaymag.com/worldpost/fun/',
+    #             'http://www.adaymag.com/lifestyle/pet/','http://www.adaymag.com/kids/']
+    start_urls=['http://www.adaymag.com/kids/','http://www.adaymag.com/lifestyle/pet/',
+                'http://www.adaymag.com/worldpost/heartwarming/','http://www.adaymag.com/worldpost/fun/']
 
     # start_urls=['http://www.adaymag.com/2015/02/28/7-images-almost-freaky-thedress.html']
 
@@ -36,14 +37,15 @@ class ADayMagSpider(scrapy.Spider):
     html_parser = HTMLParser.HTMLParser()
 
     root_class_map={
-        '温情':'36度',
+        '溫情':'36度',
         '宠物':'36度',
         'KIDS':'36度',
+        '寵物':'36度',
         '趣聞':'0度'
     }
 
     channel_map={
-        '温情':'暖心',
+        '溫情':'暖心',
         '宠物':'暖心',
         'KIDS':'暖心',
         '趣聞':'冷幽默'
@@ -132,7 +134,7 @@ class ADayMagSpider(scrapy.Spider):
         rawContent=response.xpath(xpath_str).extract()
         if not len(rawContent):
             return None
-        return CrawlerUtils.extractContent(rawContent[0],self.content_pat,self.img_pat,self.para_pat)
+        return CrawlerUtils.extractContent(rawContent[0],self.content_pat,self.img_pat,self.para_pat,base_url='http:')
 
 
     def extractImgUrl(self,response):
@@ -147,7 +149,7 @@ class ADayMagSpider(scrapy.Spider):
         for line in re.findall(self.content_pat,rawContent[0]):
             imgSearch=re.search(self.img_pat,line)
             if imgSearch:
-                return imgSearch.group(1)
+                return 'http:'+imgSearch.group(1)
         return None
 
     def extractDesc(self,response):
