@@ -1,8 +1,9 @@
 __author__ = 'yangjiwen'
 #coding=utf-8
 import json
-from news_spider_version2.items import NewsItem
+from news_spider_version2.items import NewsItem, GoogleNewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
+from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
 
 
 import scrapy
@@ -11,18 +12,20 @@ import re
 import HTMLParser
 
 
-class EarthAtlasSpider(scrapy.Spider):
-    name='EarthAtlasNews'
+class GoogleFocusNewsSpider(scrapy.Spider):
+    name='GoogleFocusNews'
 
-    allowed_domains=['world.yam.com']
+    # allowed_domains=['news.google.com.hk']
 
-    start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
-                'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
-                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
+    start_urls=['https://news.google.com.hk/nwshp?hl=zh-CN&tab=wn']
 
-    start_urls=['http://world.yam.com']
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_directry2.html']
 
-    # start_urls=['http://world.yam.com/post.php?id=3182']
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry2.html']
+
+
+
+    # start_urls=['http://www.chinanews.com/gn/2015/03-09/7113590.shtml']
     # start_urls=['http://world.yam.com/post.php?id=3292']
     # start_urls=['http://world.yam.com/post.php?id=3296']
 
@@ -30,7 +33,7 @@ class EarthAtlasSpider(scrapy.Spider):
     #一级分类下面的频道
     default_channel='最热门'
      #源网站的名称
-    sourceSiteName='地球图辑队'
+    sourceSiteName='谷歌焦点新闻'
 
 
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -42,6 +45,7 @@ class EarthAtlasSpider(scrapy.Spider):
 
     title_pat1=re.compile(r'<h2>(.+?)</h2>')
     title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
+    partial_title_pat=re.compile(r'<span class="titletext">(.*?)</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
 
@@ -54,8 +58,23 @@ class EarthAtlasSpider(scrapy.Spider):
     para_pat=re.compile(r'<p>(.*?)</p>',re.DOTALL)
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
-    nonpage_url_pat=re.compile(r'<a class=".*?"\s*?href="(post.php\?id=\d*?)">')
+
+    nonpage_url_pat=re.compile(r'<h2 class="esc-lead-article-title"><a.*?url="(.*?\.[s]?htm[l]?)"[^>]*?><span class="titletext">')
+    # =re.compile(r'<h2 class="esc-lead-article-title"><a.*?url=".*?\.[s]?htm[l]?"[^>]*?><span class="titletext">|<span class="media-strip-item-state"><a.*?url=".*?\.[s]?htm[l]?"[^>]*?><div class="item-image-wrapper">')
+    nonpage_url_pat_search=re.compile(r'<h2 class="esc-lead-article-title"><a.*?url="(.*?\.[s]?htm[l]?[^>]*?)"[^>]*?><span class="titletext">|<span class="media-strip-item-state"><a.*?url="(.*?\.[s]?htm[l]?)"[^>]*?><div class="item-image-wrapper">')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
+
+    partial_description_pat=re.compile(r'<div class="esc-lead-snippet-wrapper">(.*?)</div>')
+
+    bottom_page_url_pat=re.compile(r'<span class="media-strip-item-state"><a.*?url="(.*?\.[s]?[htm]?[l]?[^<^>]*?)"[^<^>]*?><div class="item-image-wrapper">')
+
+    middle_page_url_pat=re.compile(r'<div class="esc-secondary-article-title-wrapper"><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><span')
+
+    opinion_page_url_pat=re.compile(ur'<label class="esc-diversity-article-category">观点：</label><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><span')
+    deep_report_page_url_pat=re.compile(ur'<label class="esc-diversity-article-category">深入报道：</label><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><span')
+
+    left_page_url_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail".*?><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><div')
+
     end_content_str='以上图文只是杂志上很小的一部分……'
     start_content_str='-本文'
 
@@ -66,32 +85,26 @@ class EarthAtlasSpider(scrapy.Spider):
         '笨贼':'冷幽默','熊孩子':'冷幽默'
     }
 
+
     def parse(self,response):
 
-        url=response._get_url()
 
-        print self.extractContent(response)
-        if self.isPage(response,url) and not self.extractContent(response):
-            # print "hello"
-            pass
-        elif self.isPage(response,url) and self.extractContent(response):
-            # pass
+        url=response._get_url()
+        if  self.isPage(response,url):
             yield self.dealWithPage(response,url)
         else:
-            # pass
             results=self.dealWtihNonPage(response,url)
-            for result in results:
-                # print "hello"
-                # pass
-                yield(result)
+
+            # for result in results:
+            #     yield(result)
+
 
     def isPage(self,response,url):
         if None==url:
             return False
-        if re.match(self.page_url_pattern,url):
+        if url.endswith(".html") or url.endswith(".shtml") or url.endswith(".htm"):
             return True
         return False
-
 
 
 
@@ -229,19 +242,109 @@ class EarthAtlasSpider(scrapy.Spider):
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
         # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
-        pages_arr=response.xpath('//div[@id="mainContent"]').extract()[0]  #/li[@class="box masonry-brick"
-        results=[]
-        pages_arr_update=re.findall(self.nonpage_url_pat,pages_arr)
-        for new_page_url_raw in pages_arr_update:
-            # searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
-            if new_page_url_raw:
-                new_page_url="http://world.yam.com/"+new_page_url_raw
+        pages_arr=response.xpath('//div[@class="section top-stories-section"]/div[@class="section-content"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+        for theme_page in pages_arr:
+            print "theme_page,%s"%theme_page.extract()
+            theme_page=theme_page.extract()
+            theme_page_url=re.findall(self.nonpage_url_pat,theme_page)
+            print "theme_page_url,%s"%theme_page_url
+            partial_item=GoogleNewsItem()
+            partial_item['sourceUrl']=theme_page_url[0]
+            partial_item['_id']=theme_page_url[0]
+            title=re.findall(self.partial_title_pat,theme_page)
+            partial_item['title']=title[0]
+            print "title,%s"%partial_item['title']
+
+            description=re.findall(self.partial_description_pat,theme_page)
+            partial_item['description']=description
+            print "description,%s"%partial_item['description']
+
+            partial_item['updateTime']=CrawlerUtils.getDefaultTimeStr()
+
+            related_url=[]
+            bottom_page_url=re.findall(self.bottom_page_url_pat,theme_page)
+            for new_page_url in bottom_page_url:
                 print "new_page_url,%s"%new_page_url
-                results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
-        # prevoius_page_url=self.getPrevoiuPageUrl(response)
-        # if prevoius_page_url:
-        #     results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=True))
-        return results
+                related_url.append(({'bottom':new_page_url}))
+
+            middle_page_url=re.findall(self.middle_page_url_pat,theme_page)
+            for new_page_url in middle_page_url:
+                print "new_page_url,%s"%new_page_url
+                related_url.append(({'middle':new_page_url}))
+
+            opinion_page_url=re.findall(self.opinion_page_url_pat,theme_page)
+            if opinion_page_url:
+                for new_page_url in opinion_page_url:
+                    print "new_page_url,%s"%new_page_url
+                    related_url.append(({'opinion':new_page_url}))
+
+            deep_report_page_url=re.findall(self.deep_report_page_url_pat,theme_page)
+            if deep_report_page_url:
+                for new_page_url in deep_report_page_url:
+                    print "new_page_url,%s"%new_page_url
+                    related_url.append(({'deep_report':new_page_url}))
+
+            left_page_url=re.findall(self.left_page_url_pat,theme_page)
+            if left_page_url:
+                for new_page_url in left_page_url:
+                    print "new_page_url,%s"%new_page_url
+                    related_url.append(({'left':new_page_url}))
+
+            partial_item['relatedUrl']=related_url
+            partial_item['root_class']=self.root_class
+            partial_item['channel']=self.default_channel
+            partial_item['sourceSiteName']=self.sourceSiteName
+            partial_item['imgUrl']=None
+            if partial_item:
+                MongoUtils.saveGoogleItem(partial_item)
+
+
+
+
+
+    #处理不是页面的网址
+    # def dealWithNonPage(self,response,url):
+    #     pages_tags=response.xpath('//div[@class="layout bline"]/div/div[@class="hd"]/h2/text()').extract()
+    #     pages_arr=response.xpath('//div[@class="layout bline"]/div/div[@class="bd"]/ul')
+    #     partial_page_items=[]
+    #     city=self.extractCity(response,url)
+    #     request_items=[]
+    #     i=0
+    #     for elem_dom in pages_arr:
+    #         tag=[]
+    #         tag.append(pages_tags[i])
+    #         elems=elem_dom.xpath('./li')
+    #         for elem in elems:
+    #             partial_item=self.generatePartialItem(elem,tag,city,url)
+    #             if partial_item:
+    #                 # partial_page_items.append(partial_item)
+    #                 MongoUtils.savePartialItem(partial_item)
+    #                 print "souceUrl is %s" %partial_item['sourceUrl']
+    #                 request_items.append(scrapy.Request(partial_item['sourceUrl'],callback=self.parse,dont_filter=False))
+    #     return request_items
+
+    def generatePartialItem(self,dom_elem,tag,city,parentUrl):
+        partial_item=PartialNewsItem()
+        partial_item['tag']=tag
+        partial_item['city']=city
+        print "city is %s" %city
+
+
+        source_url_arr=dom_elem.xpath('./a/@href').extract()
+        if not len(source_url_arr):
+            return None
+        source_url=source_url_arr[0]
+        if  not source_url.startswith('http'):
+            baseUrl=self.extractBaseUrl(parentUrl)
+            if baseUrl:
+                source_url=baseUrl+source_url
+        partial_item['sourceUrl']=source_url
+        partial_item['_id']=source_url
+        partial_item['imgUrl']=dom_elem.xpath('./a/img/@src').extract()[0]
+        partial_item['title']=dom_elem.xpath('./div[@class="info"]/h2/a/text()').extract()[0]
+        partial_item['description']=dom_elem.xpath('./div[@class="info"]/p/text()').extract()[0]
+        return partial_item
+
 
 
 

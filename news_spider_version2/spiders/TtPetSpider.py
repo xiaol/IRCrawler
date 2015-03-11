@@ -32,6 +32,9 @@ class TtPetSpider(scrapy.Spider):
     # start_urls=['http://www.ttpet.com/zixun/16/n-90216.html']
     # start_urls=['http://www.ttpet.com/zixun/13/n-90213.html']
     # start_urls=['http://www.ttpet.com/zixun/25/n-90225.html']
+
+    # start_urls=['http://www.ttpet.com/zixun/90/n-90290.html']
+
     root_class='36度'
     #一级分类下面的频道
     default_channel='暖心'
