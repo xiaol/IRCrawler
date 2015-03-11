@@ -20,14 +20,13 @@ class DapentiSpider(scrapy.Spider):
     name='dapentiSpider'
     allowed_domains=['www.dapenti.com']
 
-    start_urls=['http://www.dapenti.com/blog/blog.asp?name=agile',
-                'http://www.dapenti.com/blog/blog.asp?subjectid=2&name=xilei',
+    start_urls=['http://www.dapenti.com/blog/blog.asp?subjectid=108&name=agile'
                ]
     # start_urls=['http://www.dapenti.com/blog/more.asp?name=xilei&id=24479']
 
-    root_class='36度'
+    root_class='-40度'
     #一级分类下面的频道
-    default_channel='同步喜好'
+    default_channel='冰封'
      #源网站的名称
     sourceSiteName='喷嚏网'
 
@@ -99,7 +98,7 @@ class DapentiSpider(scrapy.Spider):
         item['channel']=self.extractChannel(response,item)
         item['_id']=self.generateItemId(item)
         item['description']=self.extractDesc(response)
-        item.printSelf()
+        # item.printSelf()
         return item
 
 
@@ -112,6 +111,7 @@ class DapentiSpider(scrapy.Spider):
         xpath_str='//title/text()'
         titleStr=response.xpath(xpath_str).extract()[0]
         title=titleStr.split('--')[1]
+        print "title is %s" %title
         return title
 
     def extractTime(self,response):
