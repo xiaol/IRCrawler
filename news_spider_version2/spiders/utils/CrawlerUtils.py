@@ -415,9 +415,8 @@ class CrawlerUtils:
                 if base_url!=None:
                     img_url=base_url+img_url
                 listInfos.append({'img':img_url})
-                print "img is: %s" %img_url
+                # print "img is: %s" %img_url
             else:
-
                 txtSearch=re.search(para_pat,line)
                 if txtSearch:
                     result=None
@@ -435,7 +434,7 @@ class CrawlerUtils:
                     result=cls.html_parser.unescape(result)
                     if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                        print "txt is :%s" %result
+                        # print "txt is :%s" %result
                         listInfos.append({'txt':result})
         return CrawlerUtils.make_img_text_pair(listInfos)
 
@@ -447,7 +446,7 @@ class CrawlerUtils:
             imgSearch=re.search(img_pat,line)
             if imgSearch:
                 listInfos.append({'img':imgSearch.group(1)})
-                print "img is %s" %imgSearch.group(1)
+                # print "img is %s" %imgSearch.group(1)
             else:
                 line=cls.html_parser.unescape(line)
                 txtSearch=re.search(para_pat,line)
@@ -461,7 +460,7 @@ class CrawlerUtils:
                         if result.startswith(unwanted_pat):
                             continue
                         result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result+'\n\n'
-                        print "txt is :%s" %result
+                        # print "txt is :%s" %result
                         listInfos.append({'txt':result})
         return CrawlerUtils.make_img_text_pair(listInfos)
 
@@ -476,10 +475,10 @@ class CrawlerUtils:
                     img_url=base_url+img_url
                 if None==filt_imgs:
                     listInfos.append({'img':img_url})
-                    print "img is %s" %img_url
+                    # print "img is %s" %img_url
                 elif not img_url in filt_imgs:
                     listInfos.append({'img':img_url})
-                    print "img is %s" %img_url
+                    # print "img is %s" %img_url
 
             txtSearch=re.search(para_pat,line)
             if txtSearch:
@@ -496,7 +495,7 @@ class CrawlerUtils:
                 result=cls.html_parser.unescape(result)
                 if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
                     result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                    print "txt is :%s" %result
+                    # print "txt is :%s" %result
                     listInfos.append({'txt':result})
         result=CrawlerUtils.make_img_text_pair(listInfos)
         return result
