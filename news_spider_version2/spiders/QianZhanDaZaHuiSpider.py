@@ -30,7 +30,7 @@ class QianZhanSpider(scrapy.Spider):
     # start_urls=['http://www.qianzhan.com/news/detail/372/150313-28a17d62.html']
 
 
-    
+
     root_class='40度'
     #一级分类下面的频道
     default_channel='最热门'
