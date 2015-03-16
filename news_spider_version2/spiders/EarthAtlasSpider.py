@@ -3,6 +3,9 @@ __author__ = 'yangjiwen'
 import json
 from news_spider_version2.items import NewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
+from news_spider_version2.zhtools  import langconv
+from news_spider_version2.zhtools  import zh_wiki
+
 
 
 import scrapy
@@ -30,7 +33,7 @@ class EarthAtlasSpider(scrapy.Spider):
     #一级分类下面的频道
     default_channel='最热门'
      #源网站的名称
-    sourceSiteName='地球图辑队'
+    sourceSiteName='地球图辑队'  
 
 
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -126,6 +129,8 @@ class EarthAtlasSpider(scrapy.Spider):
         if searchResult1:
             title=searchResult1.group(1)
             # title=searchResult1.group(1)
+            title = langconv.Converter('zh-hans').convert(title.decode('utf-8'))
+            title = title.encode('utf-8')
             return title
         return None
 
@@ -195,6 +200,9 @@ class EarthAtlasSpider(scrapy.Spider):
                         if self.end_content_str in result:
                             break
                         print "txt is :%s" %result
+                        result = langconv.Converter('zh-hans').convert(result.decode('utf-8'))
+                        result = result.encode('utf-8')
+                        print "txt,%s"%result
                         listInfos.append({'txt':result})
         # print  "listInfos,%s" %listInfos
         return CrawlerUtils.make_img_text_pair(listInfos)
@@ -218,11 +226,16 @@ class EarthAtlasSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
-        tag=response.xpath('//div[@class="tabsBox curr"]/a/text()').extract()
+        tags=response.xpath('//div[@class="tabsBox curr"]/a/text()').extract()
         # searchResult1=re.search(self.title_pat1,raw_title_str)
-        if tag:
-            print "tag,%s"%tag
-            return tag
+        tag_result=[]
+        for tag in tags:
+            if tag:
+                print "tag,%s"%tag
+                tag = langconv.Converter('zh-hans').convert(tag.decode('utf-8'))
+                tag = tag.encode('utf-8')
+                tag_result.append(tag)
+        return tag_result
         return None
 
 
