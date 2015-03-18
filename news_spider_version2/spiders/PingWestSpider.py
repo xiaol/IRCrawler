@@ -40,7 +40,9 @@ class PingWestSpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/alibaba-taiwan/']
     #  start_urls=['http://www.pingwest.com/hot-self-timer-lever/']
     # start_urls=['http://www.pingwest.com/wanbao-2015-03-04/']
-
+    # start_urls=['http://www.pingwest.com/windows-hello-fingerprint-face-retina-scan/']
+    # start_urls=['http://www.pingwest.com/yc-2015-winter-numbers-and-infographic/']
+         
     root_class='40度'
     #一级分类下面的频道
     default_channel='数码科技'
@@ -55,7 +57,7 @@ class PingWestSpider(scrapy.Spider):
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
 
-    title_pat1=re.compile(r'<h1>(.+?)</h1>')
+    title_pat1=re.compile(r'<h1[^>]*?>(.+?)</h1>')
     title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
