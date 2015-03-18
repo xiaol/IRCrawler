@@ -174,6 +174,7 @@ class CityTencentJJJSpider(scrapy.Spider):
         partial_item['city']=city
         print "city is %s" %city
 
+
         source_url_arr=dom_elem.xpath('./a/@href').extract()
         if not len(source_url_arr):
             return None

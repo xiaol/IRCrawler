@@ -26,6 +26,8 @@ class NewsSpiderVersion2Pipeline(object):
         self.partialColl=db[settings['MONGODB_PARTIAL_ITEM_COLL']]
         self.product_collection=db[settings['MONGODB_PRODUCT_COLLECTION']]
         self.item_to_item_collection=db[settings['MONGODB_ITEM_TO_ITEM_COLL']]
+        self.googleColl=db[settings['MONGODB_GOOGLE_ITEM_COLL']]
+
 
     def process_item(self, item, spider):
         if type(item) is NewsItem:

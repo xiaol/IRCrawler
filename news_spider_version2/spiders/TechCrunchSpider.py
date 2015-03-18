@@ -3,67 +3,61 @@ __author__ = 'yangjiwen'
 import json
 from news_spider_version2.items import NewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
-
-
+import datetime
 import scrapy
 import re
+import time
 
 import HTMLParser
 
 
-class QianZhanSpider(scrapy.Spider):
-    name='QianZhanDaZhaHuiNews'
-    allowed_domains=['qianzhan.com']
+class TechCrunchSpider(scrapy.Spider):
+    name='TechCrunchNews'
+    allowed_domains=['techcrunch.cn']
 
-    start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/sex','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
-                'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
-                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
 
     start_urls=['http://www.lensmagazine.com.cn/category/reporting/focus','http://www.lensmagazine.com.cn/category/reporting/special-topic']
 
     # start_urls=['http://www.lensmagazine.com.cn/reporting/focus/10174.html']
 
-    start_urls=['http://t.qianzhan.com/dazahui/']
-    # start_urls=['http://t.qianzhan.com/dazahui/detail/150120-af9e8c99.html']
-
-    start_urls=['http://www.qianzhan.com/news/']
-    # start_urls=['http://www.qianzhan.com/news/detail/372/150313-28a17d62.html']
+    start_urls=['http://www.qianzhan.com/ent/list/323.html','http://www.qianzhan.com/ent/list/325.html']
+    # start_urls=['http://www.qianzhan.com/ent/detail/323/150120-816bf569.html']
+    start_urls=['http://techcrunch.cn/']
 
 
+    # start_urls=['http://techcrunch.cn/2015/03/12/put-a-rugged-ring-on-it/']
 
     root_class='40度'
     #一级分类下面的频道
-    default_channel='最热门'
+    default_channel='数码科技'
      #源网站的名称
-    sourceSiteName='头条前瞻'
+    sourceSiteName='TechCrunch'
 
-  
+    channel_pat=re.compile(r'http://www.qianzhan.com/ent/detail/325/.*?')
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-    page_url_pattern=re.compile(r'^http://www\.qianzhan\.com/news/detail/.*?$')
+    page_url_pattern=re.compile(r'^http://techcrunch\.cn/\d+/.*?$')
 
     total_pages_pattern=re.compile(r'<span class="page-ch">.*?(\d+).*?</span>')
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
 
-    title_pat1=re.compile(r'<h1 id="h_title">(.+?)</h1>')
+    title_pat1=re.compile(r'<h1 class="alpha tweet-title">(.+?)</h1>')
     title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
 
-    time_pat=re.compile(r'<span id="pubtime_baidu">(.*?)</span>')
-
-
-
+    time_pat=re.compile(r'<time.*?class="timestamp">(.*?)</time>')
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p.*?</p>',re.DOTALL)
-    img_pat=re.compile(r'<img\s*?src="(.*?\.jpg)".*?>')
-    para_pat=re.compile(r'<p.*?>(.*?)</p>',re.DOTALL)
+    content_pat=re.compile(r'<p>.*?</p>|<img.*?src="http://files\.techcrunch\.cn.*?".*?>')
+    # img_pat=re.compile(r'<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
+    img_pat=re.compile(r'<img.*?src="(http://files\.techcrunch\.cn.*?)".*?')
+    para_pat=re.compile(r'<p>(.*?)</p>')
 
-    previous_page_pat=re.compile(r'<a\s*?href="(.*?)".*?>.*?</a>')
-    nonpage_url_pat=re.compile(r'<a href="(http://www\.qianzhan\.com.*?\.html)" target="_blank">')
+    previous_page_pat=re.compile(r'<a class="next page-numbers" href="([^"]*?)">')
+    nonpage_url_pat=re.compile(r'<a href="(http://techcrunch\.cn/.*?)" data-omni-sm="gbl_river_headline,\d+">')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
-    end_content_str='以上图文只是杂志上很小的一部分……'
+    end_content_str='Mtime时光网专稿 未经许可不得转载'
 
 
     # http://tu.duowan.com/g/01/82/e7.html
@@ -75,9 +69,9 @@ class QianZhanSpider(scrapy.Spider):
 
     def parse(self,response):
   
+
         url=response._get_url()
         if self.isPage(response,url):
-
             yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
@@ -118,7 +112,7 @@ class QianZhanSpider(scrapy.Spider):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        raw_title_str=response.xpath('//div[@class="art_main"]/div[@class="inner"]/div[@id="div_conbody"]').extract()[0]
+        raw_title_str=response.xpath('//header[@class="article-header page-title"]').extract()[0]
         searchResult1=re.search(self.title_pat1,raw_title_str)
         # searchResult2=re.search(self.title_pat2,raw_title_str)
         # title=searchResult1+searchResult2
@@ -126,12 +120,15 @@ class QianZhanSpider(scrapy.Spider):
             title=searchResult1.group(1)
             # title=searchResult1.group(1)
             title=CrawlerUtils.removeUnwantedTag(title)
+
             return title
         return None
 
     def extractTime(self,response):
-        raw_time_str=response.xpath('//div[@class="art_main"]/div[@class="inner"]/div[@id="div_conbody"]/div[@class="info"]/p[@class="fl"]').extract()[0]
-        searchResult=re.search(self.time_pat,raw_time_str)
+
+        raw_time_str=response.xpath('//header[@class="article-header page-title"]/div[@class="title-left"]/div[@class="byline"]').extract()
+        print "raw,%s"%raw_time_str
+        searchResult=re.search(self.time_pat,str(raw_time_str))
         if searchResult:
             time=searchResult.group(1)
             return self.formatTime(time)
@@ -144,27 +141,29 @@ class QianZhanSpider(scrapy.Spider):
         for digit in digitals:
             if len(digit)<2:
                 digit='0'+digit
-            if i==3 and timeStr.endswith('pm'):
-                hour=int(digit)+12
-                digit=str(hour)
+
             resultArr.append(digit)
             if i<2:
                 resultArr.append('-')
-            elif i==2:
-                resultArr.append(' ')
-            elif i<5:
-                resultArr.append(':')
             i=i+1
-        # second=CrawlerUtils.getDefaultTimeStr().split(':')[-1]
-        # resultArr.append(second)
+        other_time=CrawlerUtils.getDefaultTimeStr()[10:]
+        resultArr.append(other_time)
+        # resultArr1=''.join(resultArr)
+        # print "result %s" %resultArr1
         return ''.join(resultArr)
+
+
+     # 2015-01-07 11:50:09
+
 
     def extractRootClass(self,response):
         return self.root_class
 
     def extractChannel(self,response,item):
-        # if item['tag']==None:
-        #     return self.default_channel
+        # searchResult=re.search(self.channel_pat,item['sourceUrl'])
+        # if searchResult:
+        #     return '热播剧'
+        # #     return self.default_channel
         # channel=self.channel_map[item['tag'][0].lower().encode('utf-8')]
         # if channel:
         #     print "channel is %s " %channel
@@ -172,47 +171,61 @@ class QianZhanSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@id="div_content"]').extract()
+        rawContent=response.xpath('//div[@class="l-two-col"]/div[@class="l-main-container"]/div[@class="l-main"]/div[@class="article-entry text"]').extract()[0]
         if not len(rawContent):
             return None
         listInfos=[]
-
-        find_result=re.findall(self.content_pat,rawContent[0])
+        print "rawcontent,%s" %rawContent
+        find_result=re.findall(self.content_pat,rawContent)
         print "rawcontent %s" %find_result
         for line in find_result:
             print "line,%s"%line
-            imgSearch=re.search(self.img_pat,line)
+            imgSearch=re.findall(self.img_pat,line)
             if imgSearch:
-                listInfos.append({'img':imgSearch.group(1)})
-                print "img is %s" %imgSearch.group(1)
-            else:
-                txtSearch=re.search(self.para_pat,line)
-                if txtSearch:
-                    result=txtSearch.group(1)
-                    result=CrawlerUtils.removeParasedCode(result)
-                    result=CrawlerUtils.removeScript(result)
-                    result=CrawlerUtils.removeUnwantedTag(result)
-                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
-                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                        if self.end_content_str in result:
-                            break
-                        print "txt is :%s" %result
-                        listInfos.append({'txt':result})
+                for img in imgSearch:
+                    # img=re.search(self.img_pat,img)
+                    listInfos.append({'img':''.join(list(img))})
+                    print "img is %s" %''.join(list(img))
+
+            txtSearch=re.search(self.para_pat,line)
+            # txtSearch=rawContent.xpath('/div/text()')
+            if txtSearch:
+                result=txtSearch.group()
+                result=CrawlerUtils.removeParasedCode(result)
+                result=CrawlerUtils.removeScript(result)
+                result=CrawlerUtils.removeUnwantedTag(result)
+                if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+                    result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+                    if self.end_content_str in result:
+                        break
+                    print "txt is :%s" %result
+                    listInfos.append({'txt':result})
         # print  "listInfos,%s" %listInfos
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
-        rawContent=response.xpath('//div[@id="div_content"]').extract()
+        rawContent=response.xpath('//div[@class="l-two-col"]/div[@class="l-main-container"]/div[@class="l-main"]/div[@class="article-entry text"]').extract()
         if not len(rawContent):
             return None
         for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.img_pat,line)
+            imgSearch=re.findall(self.img_pat,line)
             if imgSearch:
-                print "imgsearch,%s"%imgSearch
-                return imgSearch.group(1)
+                for img in imgSearch:
+                    # img=re.search(self.img_pat,img)
+                    return ''.join(list(img))
+
+            # imgSearch=re.search(self.img_pat,line)
+            # if imgSearch:
+            #     print "imgsearch,%s"%imgSearch
+            #     return imgSearch.group(0)
         return None
 
     def extractDesc(self,response):
+        rawContent=response.xpath('//div[@class="newsnote"]/text()').extract()
+
+        if rawContent:
+            return rawContent
+
         return None
 
     def extractSourceSiteName(self,response):
@@ -220,7 +233,7 @@ class QianZhanSpider(scrapy.Spider):
 
     #获取文章的tag信息
     def extractTag(self,response):
-        tag=response.xpath('//div[@class="tags"]/div[@class="fl"]/a/text()').extract()
+        tag=response.xpath('//div[@class="post-tags"]/a/text()').extract()
         print "tag,%s"%tag
         return tag
 
@@ -228,44 +241,38 @@ class QianZhanSpider(scrapy.Spider):
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
         # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
-        pages_arr=response.xpath('//div[@class="top_area"]/div[@class="col_l"]/div[@class="focus"]').extract()  #/li[@class="box masonry-brick"
+        pages_arr=response.xpath('//div[@class="fluid flush split homepage"]').extract()[0]  #/li[@class="box masonry-brick"
+        find_result=re.findall(self.nonpage_url_pat,pages_arr)
         print "pages_arr,%s" %pages_arr
         results=[]
-        find_result=re.findall(self.nonpage_url_pat,pages_arr[0])
 
         for new_page_url_raw in find_result:
             # searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
-            # if searchResult:
-            #     new_page_url=searchResult.group(1)
-
-            print "new_page_url is %s" %new_page_url_raw
-            results.append(scrapy.Request(new_page_url_raw,callback=self.parse,dont_filter=False))
-
-            # prevoius_page_url=self.getPrevoiuPageUrl(response)
-            # print "pevoious_page_url,%s"%prevoius_page_url
-            # if prevoius_page_url:
-            #     results.append(scrapy.Request(prevoius_page_url,callback=self.parse,dont_filter=True))
+            if new_page_url_raw:
+                new_page_url=new_page_url_raw    #.group(1)
+                print "new_page_url is %s" %new_page_url
+                results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
+        # prevoius_page_url=self.getPrevoiuPageUrl(response)
+        # print "pevoious_page_url,%s"%prevoius_page_url
+        # if prevoius_page_url:
+        #     results.append(scrapy.Request(prevoius_page_url,callback=self.parse,dont_filter=True))
         return results
 
 
 
 
-
-
-
-
-# http://t.qianzhan.com//dazahui/p-2.html
      #获取前面一页的url
     def getPrevoiuPageUrl(self,response):
-        # title_sign=u'下一页'
-        xpath_str='//div[@class="main"]/div[@class="feed-more"]'.decode('utf8')
+        title_sign=u'下一页'
+        xpath_str='//div[@class="page-nav"]/ul[@class="pagination"]'.decode('utf8')
         previousUrlsPath=response.xpath(xpath_str).extract()
+        print "previousUrlsPath,%s"%previousUrlsPath
         searchResult=re.search(self.previous_page_pat,str(previousUrlsPath))
+
         # print "hello"
         if searchResult:
             page_url_str=searchResult.group(1)
             if page_url_str:
-                page_url_str="http://t.qianzhan.com/"+page_url_str
                 print "privious page's url is %s " %page_url_str
                 return page_url_str
         return None

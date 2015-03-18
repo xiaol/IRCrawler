@@ -64,6 +64,28 @@ class NewsItem(scrapy.Item):
                 self[key]=dict_obj[key]
 
 
+
+class GoogleNewsItem(scrapy.Item):
+    # item 的唯一标识 用源网址
+    _id=scrapy.Field()
+    #比如0度，36度，等一级分类
+    root_class=scrapy.Field()
+    #一级分类下面的频道
+    channel=scrapy.Field()
+    title=scrapy.Field()
+     #item 的缩略图
+    imgUrl=scrapy.Field()
+    #item 生成的时间
+    updateTime=scrapy.Field()
+    #item 的描述
+    description=scrapy.Field()
+    sourceUrl=scrapy.Field()
+    #源网站的名称
+    sourceSiteName=scrapy.Field()
+    relatedUrl=scrapy.Field()
+
+
+
 class PartialNewsItem(scrapy.Item):
     # item 的唯一标识 用源网址
     _id=scrapy.Field()

@@ -12,6 +12,8 @@ class MongoUtils:
     collection = db[settings['MONGODB_COLLECTION']]
     scrappedColl=db[settings['MONGODB_CRAWLED_COLLECTION']]
     partialColl=db[settings['MONGODB_PARTIAL_ITEM_COLL']]
+
+    googleColl=db[settings['MONGODB_GOOGLE_ITEM_COLL']]
     product_collection=db[settings['MONGODB_PRODUCT_COLLECTION']]
     root_info_coll=db[settings['MONGODB_ROOT_INFO_COLL']]
 
@@ -44,6 +46,10 @@ class MongoUtils:
     @classmethod
     def savePartialItem(cls,item):
         cls.partialColl.save(dict(item))
+
+    @classmethod
+    def saveGoogleItem(cls,item):
+        cls.googleColl.save(dict(item))
 
     #返回item的 root_id ,root_name,channel_id,channel_name
     @classmethod

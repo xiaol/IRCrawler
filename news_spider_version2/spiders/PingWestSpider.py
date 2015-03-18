@@ -38,6 +38,8 @@ class PingWestSpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/10-richest-tech-guy/']
     # start_urls=['http://www.pingwest.com/chris-sacca-cant-wait-for-the-tech-bubble-to-burst/']
     # start_urls=['http://www.pingwest.com/alibaba-taiwan/']
+    #  start_urls=['http://www.pingwest.com/hot-self-timer-lever/']
+    # start_urls=['http://www.pingwest.com/wanbao-2015-03-04/']
 
     root_class='40度'
     #一级分类下面的频道
