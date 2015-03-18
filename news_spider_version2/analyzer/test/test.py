@@ -103,6 +103,6 @@ if __name__ == "__main__":
     # cuttest('阿Q腰间挂着BB机手里拿着大哥大，说：我一般吃饭不AA制的。')
     # cuttest('在1号店能买到小S和大S八卦的书，还有3D电视。')
     #
-    cuttest_stop('我是中 国 人,我 爱我的祖国')
+    cuttest_stop('美好的周末')
     cuttest_stop('I am chinnese')
     #jieba.printStopWord()

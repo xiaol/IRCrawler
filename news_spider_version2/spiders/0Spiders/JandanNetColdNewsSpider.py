@@ -18,7 +18,7 @@ class JandanColdNewsSpider(scrapy.Spider):
 
     start_urls=['http://jandan.net/tag/wtf','http://jandan.net/tag/%E7%88%B7%E6%9C%89%E9%92%B1',
                 'http://jandan.net/tag/DIY','http://jandan.net/tag/meme','http://jandan.net/tag/Geek','http://jandan.net/tag/%E5%B0%8F%E8%B4%B4%E5%A3%AB',
-                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E7%86%8A%E5%AD%A9%E5%AD%90']
+                'http://jandan.net/tag/%E7%AC%A8%E8%B4%BC','http://jandan.net/tag/%E8%B5%B0%E8%BF%9B%E7%A7%91%E5%AD%A6d']
 
     # start_urls=['http://jandan.net/2015/02/06/matrix-fun-facts.html']
     #
@@ -48,7 +48,7 @@ class JandanColdNewsSpider(scrapy.Spider):
 
     html_parser = HTMLParser.HTMLParser()
     channel_map={'wtf':'冷新闻','WTF':'冷新闻','sex':'冷新闻','SEX':'冷新闻','爷有钱':'冷新闻',
-       'diy':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识',
+       'diy':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识','走进科学':'冷知识',
         '笨贼':'冷幽默','熊孩子':'冷幽默'
     }
 
