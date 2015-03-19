@@ -27,7 +27,7 @@ class PingWestSpider(scrapy.Spider):
     # start_urls=['http://www.qianzhan.com/ent/detail/323/150120-816bf569.html']
     start_urls=['http://news.mtime.com/tv/2/index.html','http://news.mtime.com/tv/1/index.html#nav','http://news.mtime.com/tv/3/index.html#nav']
 
-
+        
 
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
@@ -42,7 +42,10 @@ class PingWestSpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/wanbao-2015-03-04/']
     # start_urls=['http://www.pingwest.com/windows-hello-fingerprint-face-retina-scan/']
     # start_urls=['http://www.pingwest.com/yc-2015-winter-numbers-and-infographic/']
-         
+    # start_urls=['http://www.pingwest.com/hot-dongmingzhu-geli/']
+    # start_urls=['http://www.pingwest.com/uber-ydauto/']
+    # start_urls=['http://www.pingwest.com/search-for-wechat-pay/']
+
     root_class='40度'
     #一级分类下面的频道
     default_channel='数码科技'
@@ -65,9 +68,10 @@ class PingWestSpider(scrapy.Spider):
     time_pat=re.compile(r'<span class="post-time">(.*?)</span>',re.DOTALL)
     digital_pat=re.compile(r'\d+')
 
-    content_pat=re.compile(r'<p.*?</p>|<div class="post-img".*?http://cdn\.pingwest\.com.*?\.jpg\)">|<li><a.*?pic=http://cdn.pingwest\.com/.*?.jpg')
+    content_pat=re.compile(r'<p.*?</p>|<div class="post-img".*?http://cdn\.pingwest\.com.*?\.jpg\)">') #|<li><a.*?pic=http://cdn.pingwest\.com/.*?.jpg
     # img_pat=re.compile(r'<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
     img_pat=re.compile(r'<img.*?src="(http://cdn\.pingwest\.com.*?)".*?>|<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">|<li><a.*?pic=(http://cdn.pingwest\.com/.*?.jpg)')
+    # img_pat=re.compile(r'<img.*?src="(http://cdn\.pingwest\.com.*?)".*?>|<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">|<li><a.*?pic=(http://cdn.pingwest\.com/.*?.jpg)')
     para_pat=re.compile(r'<p.*?>(.*?)</p>')
 
     previous_page_pat=re.compile(r'<a class="next page-numbers" href="([^"]*?)">')
@@ -222,36 +226,39 @@ class PingWestSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//article[@class="post-article"]').extract()[0]
-        if not len(rawContent):
+        rawContents=response.xpath('//article[@class="post-article"]/div[@class="post-img"]|//article[@class="post-article"]/div/div/div/div/div[@id="sc-container"]').extract()
+        if not len(rawContents):
             return None
         listInfos=[]
-        print "rawcontent,%s" %rawContent
-        find_result=re.findall(self.content_pat,rawContent)
-        print "rawcontent %s" %find_result
-        for line in find_result:
-            print "line,%s"%line
-            imgSearch=re.findall(self.img_pat,line)
-            if imgSearch:
-                for img in imgSearch:
-                    # img=re.search(self.img_pat,img)
-                    listInfos.append({'img':''.join(list(img))})
-                    print "img is %s" %''.join(list(img))
+        for rawContent in rawContents:
 
-            txtSearch=re.search(self.para_pat,line)
-            # txtSearch=rawContent.xpath('/div/text()')
-            if txtSearch:
-                result=txtSearch.group()
-                result=CrawlerUtils.removeParasedCode(result)
-                result=CrawlerUtils.removeScript(result)
-                result=CrawlerUtils.removeUnwantedTag(result)
-                if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
-                    result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                    if self.end_content_str in result:
-                        break
-                    print "txt is :%s" %result
-                    listInfos.append({'txt':result})
-        # print  "listInfos,%s" %listInfos
+            print "rawcontent,%s" %rawContent
+
+            find_result=re.findall(self.content_pat,rawContent)
+            print "rawcontent %s" %find_result
+            for line in find_result:
+                print "line,%s"%line
+                imgSearch=re.findall(self.img_pat,line)
+                if imgSearch:
+                    for img in imgSearch:
+                        # img=re.search(self.img_pat,img)
+                        listInfos.append({'img':''.join(list(img))})
+                        print "img is %s" %''.join(list(img))
+
+                txtSearch=re.search(self.para_pat,line)
+                # txtSearch=rawContent.xpath('/div/text()')
+                if txtSearch:
+                    result=txtSearch.group()
+                    result=CrawlerUtils.removeParasedCode(result)
+                    result=CrawlerUtils.removeScript(result)
+                    result=CrawlerUtils.removeUnwantedTag(result)
+                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+                        if self.end_content_str in result:
+                            break
+                        print "txt is :%s" %result
+                        listInfos.append({'txt':result})
+            # print  "listInfos,%s" %listInfos
         return CrawlerUtils.make_img_text_pair(listInfos)
 
     def extractImgUrl(self,response):
