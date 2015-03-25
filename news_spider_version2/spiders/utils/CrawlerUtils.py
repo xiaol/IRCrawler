@@ -39,6 +39,7 @@ class CrawlerUtils:
     scriptPat=re.compile(r'(?:(?:<script>)|(?:<script .*?>)).*?</script>',re.DOTALL)
     stylePat=re.compile(r'((?:<style>)|(?:<style .*?>)).*?</style>',re.DOTALL)
     parasedPat=re.compile(r'<!--(.*?)-->',re.DOTALL)
+    digit_pat=re.compile(r'\d+')
 
     urlPattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     html_parser = HTMLParser.HTMLParser()
@@ -405,6 +406,39 @@ class CrawlerUtils:
             return None
 
     @classmethod
+    def extractContentList(cls,listInfos,rawContent,content_pat,img_pat,para_pat,base_url=None,filt_imgs=None):
+        for line in re.findall(content_pat,rawContent):
+            imgSearch=re.search(img_pat,line)
+            if imgSearch:
+                img_url=imgSearch.group(1)
+                if base_url!=None:
+                    img_url=base_url+img_url
+                listInfos.append({'img':img_url})
+                # print "img is: %s" %img_url
+            else:
+                txtSearch=re.search(para_pat,line)
+                if txtSearch:
+                    result=None
+                    groups=txtSearch.groups()
+                    for group in groups:
+                        if group:
+                            result=group
+                            break
+                    if None==result:
+                        continue
+
+                    result=CrawlerUtils.removeParasedCode(result)
+                    result=CrawlerUtils.removeScript(result)
+                    result=CrawlerUtils.removeUnwantedTag(result)
+                    result=cls.html_parser.unescape(result)
+                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+                        # print "txt is :%s" %result
+                        listInfos.append({'txt':result})
+
+
+
+    @classmethod
     def extractContent(cls,rawContent,content_pat,img_pat,para_pat,base_url=None,filt_imgs=None):
         listInfos=[]
 
@@ -518,3 +552,42 @@ class CrawlerUtils:
                 elif not img_url in filt_imgs:
                     return img_url
         return None
+
+    @classmethod
+    def formatTimeDigitalPat(cls,raw_time_str):
+        digit_arr=re.findall(cls.digit_pat,raw_time_str)
+        i=0
+        time_arr=[]
+        for digit in digit_arr:
+            if len(digit)<2:
+                time_arr.append('0')
+            time_arr.append(digit)
+            if i<2:
+                time_arr.append('-')
+            elif i==2:
+                time_arr.append(' ')
+            elif i<5:
+                time_arr.append(':')
+            i=i+1
+        time=''.join(time_arr)
+        if i==0:
+            return cls.getDefaultTimeStr()
+        if i==1:
+            defaultTimeStr=cls.getDefaultTimeStr()
+            index=defaultTimeStr.lfind('-')
+            result=time+defaultTimeStr[index:]
+            return result
+        if i==2:
+            defaultTimeStr=cls.getDefaultTimeStr()
+            return time+defaultTimeStr.split('-')[1]
+        if i==3:
+            defaultTimeStr=cls.getDefaultTimeStr()
+            return time+defaultTimeStr.split(' ')
+        if i==4:
+            defaultTimeStr=cls.getDefaultTimeStr()
+            return time+defaultTimeStr.split(':')[0].split(' ')[1]
+        if i==5:
+            defaultTimeStr=cls.getDefaultTimeStr()
+            return time+defaultTimeStr.split(':')[1]
+
+        return time

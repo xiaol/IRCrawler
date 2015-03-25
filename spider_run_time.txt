@@ -1,0 +1,4 @@
+starting time is 
+ 1.339194
+the elapsed time is 
+0.001426
