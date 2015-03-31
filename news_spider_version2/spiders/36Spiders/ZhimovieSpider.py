@@ -19,7 +19,7 @@ class ZhimovieSpider(scrapy.Spider):
     allowed_domains=['zhihu.com']
 
     start_urls=['http://zhuanlan.zhihu.com/zhimovie']
-    # start_urls=['http://www.douban.com/note/427790805']
+    # start_urls=['http://zhuanlan.zhihu.com/zhimovie/19981943']
 
     root_class='36度'
     #一级分类下面的频道
@@ -36,24 +36,24 @@ class ZhimovieSpider(scrapy.Spider):
 
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
 
-    content_pat=re.compile(r'<p(?: [^<>]+?)?>[^<>]+?</p>|<img(?: .*?)? src=".*?"(?: .*?)?>')
+    content_pat=re.compile(r'<p(?: [^<>]+?)?>.*?</p>|<img(?: .*?)? src=".*?"(?: .*?)?>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'p(?: [^<>]+?)?>([^<>]+?)</p>')
+    para_pat=re.compile(r'p(?: [^<>]+?)?>([^<>]+?)(?:\s*<br>\s*)?</p>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
     html_parser = HTMLParser.HTMLParser()
 
 
-    def start_requests(self):
-        urls=set([])
-        for start_url in self.start_urls:
-            page_urls=self.getPageUrlsFromSelenium(start_url)
-            if page_urls:
-                for page_url in page_urls:
-                    urls.add(page_url)
-        for url in urls:
-            yield scrapy.Request(url,callback=self.parse,dont_filter=False)
+    # def start_requests(self):
+    #     urls=set([])
+    #     for start_url in self.start_urls:
+    #         page_urls=self.getPageUrlsFromSelenium(start_url)
+    #         if page_urls:
+    #             for page_url in page_urls:
+    #                 urls.add(page_url)
+    #     for url in urls:
+    #         yield scrapy.Request(url,callback=self.parse,dont_filter=False)
 
 
     def getPageUrlsFromSelenium(self,url):
