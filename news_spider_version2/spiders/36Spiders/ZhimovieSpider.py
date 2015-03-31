@@ -1,7 +1,9 @@
 #coding=utf-8
-from news_spider_version2.items import NewsItem, PartialNewsItem
+from scrapy.conf import settings
+from selenium import webdriver
+from news_spider_version2.items import NewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
-from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
+
 
 
 __author__ = 'galois'
@@ -34,28 +36,73 @@ class ZhimovieSpider(scrapy.Spider):
 
     time_pat=re.compile(r'</a>\s*?@\s*([\d\. ,:]+\w+)\s*?</div>')
 
-    content_pat=re.compile(r'\s*[^>]*?\s*<br>|<img(?: .*?)? src=".*?"(?: .*?)?>')
+    content_pat=re.compile(r'<p(?: [^<>]+?)?>[^<>]+?</p>|<img(?: .*?)? src=".*?"(?: .*?)?>')
     img_pat=re.compile(r'<img(?: .*?)? src="(.*?)"(?: .*?)?>')
-    para_pat=re.compile(r'\s*([^>]*?)\s*<br>')
+    para_pat=re.compile(r'p(?: [^<>]+?)?>([^<>]+?)</p>')
 
     previous_page_pat=re.compile(ur'<a href="([\w:/\d\.]+)"(?: [^<>]+?)?>></a>')
 
     html_parser = HTMLParser.HTMLParser()
 
+
+    def start_requests(self):
+        urls=set([])
+        for start_url in self.start_urls:
+            page_urls=self.getPageUrlsFromSelenium(start_url)
+            if page_urls:
+                for page_url in page_urls:
+                    urls.add(page_url)
+        for url in urls:
+            yield scrapy.Request(url,callback=self.parse,dont_filter=False)
+
+
+    def getPageUrlsFromSelenium(self,url):
+        caps={
+        'takeScreenshot':False,
+        'javascriptEnabled':True,
+        }
+
+        phantom_link=settings['PHANTOM_LINK']
+
+        driver=webdriver.Remote(
+            command_executor=phantom_link,
+            desired_capabilities=caps
+        )
+
+        driver.get(url)
+        # print driver.title
+        results=[]
+        elems=driver.find_elements_by_xpath('//ul[@class="items"]/li/article/header/a[@class="vote-num ng-binding"]')
+        for elem in elems:
+            abs_url=elem.get_attribute('href')
+            # print "the url is %s" %abs_url
+            results.append(abs_url)
+        return results
+
+
     def parse(self,response):
         url=response._get_url()
-        page_test=self.isPage(response,url)
-        #不是要爬取的页面
-        if page_test==None:
-            return
-        if page_test:
+        if self.isPage(response,url):
             yield self.dealWithPage(response,url)
         else:
-            non_page_results,results=self.dealWithNonPage(response,url)
-            for non_page_result in non_page_results:
-                yield(non_page_result)
-            for result in results:
-                yield(result)
+            results=self.dealWithNonPage(response,url)
+            # for result in results:
+            #     yield(result)
+
+    # def parse(self,response):
+    #     url=response._get_url()
+    #     page_test=self.isPage(response,url)
+    #     #不是要爬取的页面
+    #     if page_test==None:
+    #         return
+    #     if page_test:
+    #         yield self.dealWithPage(response,url)
+    #     else:
+    #         non_page_results,results=self.dealWithNonPage(response,url)
+    #         for non_page_result in non_page_results:
+    #             yield(non_page_result)
+    #         for result in results:
+    #             yield(result)
 
     def isPage(self,response,url):
         if None==url:
@@ -74,9 +121,10 @@ class ZhimovieSpider(scrapy.Spider):
         item['root_class']=self.extractRootClass(response)
 
         item['updateTime']=self.extractTime(response)
-        item['title']=self.extractTitle(response)
-        item['content']=self.extractContent(response)
-        item['imgUrl']=self.extractImgUrl(response)
+        page_driver=self.getSeninumPageDriver(url)
+        item['title']=self.extractTitle(page_driver)
+        item['content']=self.extractContent(page_driver)
+        item['imgUrl']=self.extractImgUrl(page_driver)
         item['sourceUrl']=url
         item['sourceSiteName']=self.extractSourceSiteName(response)
         item['tag']=self.extractTag(response)
@@ -87,17 +135,44 @@ class ZhimovieSpider(scrapy.Spider):
         item.printSelf()
         return item
 
+    def getSeninumPageDriver(self,url):
+        caps={
+        'takeScreenshot':False,
+        'javascriptEnabled':True,
+        }
+
+        phantom_link=settings['PHANTOM_LINK']
+
+        driver=webdriver.Remote(
+            command_executor=phantom_link,
+            desired_capabilities=caps
+        )
+
+        driver.get(url)
+        return driver;
+
+
 
     def generateItemId(self,item):
         return item['sourceUrl']
 
     def extractTitle(self,response):
-        title=response.xpath('//div[@class="note-header note-header-container"]/h1/text()').extract()[0]
+        xpath_str='//article[@class="entry ng-scope"]/header/h1'
+        title=response.find_element_by_xpath(xpath_str).text
         return title
 
+
     def extractTime(self,response):
-        raw_time_str=response.xpath('//div[@class="note-header note-header-container"]/div/span/text()').extract()[0]
-        time=raw_time_str
+        xpath_str='//div[@class="entry-meta"]/time/@datetime'
+        raw_time_strArr=response.xpath(xpath_str).extract()
+        if(len(raw_time_strArr)):
+            raw_time_str=raw_time_strArr[0]
+            return self.formatTime(raw_time_str)
+
+        return CrawlerUtils.getDefaultTimeStr()
+
+    def formatTime(self,raw_time_str):
+        time=raw_time_str.split('+')[0].sub('T',' ')
         return time
 
     def extractRootClass(self,response):
@@ -107,18 +182,17 @@ class ZhimovieSpider(scrapy.Spider):
         return self.default_channel
 
     def extractContent(self,response):
-        rawContent=response.xpath('//div[@id="link-report"]').extract()[0]
+        xpath_str='//section[@class="entry-content ng-binding"]'
+        rawContent_elem=response.find_element_by_xpath(xpath_str)
+        rawContent=rawContent_elem.get_attribute('innerHTML')
         return CrawlerUtils.extractContent(rawContent,self.content_pat,self.img_pat,self.para_pat)
 
 
     def extractImgUrl(self,response):
-        rawContent=response.xpath('//div[@id="link-report"]').extract()
-        if not len(rawContent):
-            return None
-        for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.img_pat,line)
-            if imgSearch:
-                return imgSearch.group(1)
+        xpath_str='//div[@class="entry-title-image ng-scope"]/img'
+        imgUrlElem=response.find_element_by_xpath(xpath_str)
+        if imgUrlElem:
+            return imgUrlElem.get_attribute('src')
         return None
 
     def extractDesc(self,response):
@@ -145,33 +219,6 @@ class ZhimovieSpider(scrapy.Spider):
 
     #处理不是页面的网址
     def dealWithNonPage(self,response,url):
-        xpath_str='//div[@class="items-container ui-infinite"]/ul[@class="items"]/li/article/header/a/@href'
-        pages_arr=response.xpath(xpath_str).extract()
-        request_items=[]
-        for elem in pages_arr:
-            pageUrl=self.base_url+elem
-            print "the pageUrl is %s"%pageUrl
-            request_items.append(scrapy.Request(pageUrl,callback=self.parse,dont_filter=False))
-
-        non_page_results=[]
-        return non_page_results,request_items
+        return None,None
 
 
-     #获取前面一页的url
-    def getPrevoiuPageUrl(self,response):
-        xpath_str='//div[@class="paginator"]/span[@class="next"]/link/@href'
-        previousUrlsPath=response.xpath(xpath_str).extract()
-        if len(previousUrlsPath):
-            html_parser=HTMLParser.HTMLParser()
-            page_url_str=html_parser.unescape(previousUrlsPath[0])
-            return page_url_str
-        return None
-
-
-
-if __name__=='__main__':
-    # some_interface='http://jandan.duoshuo.com/api/threads/listPosts.json?thread_key=comment-2650694&url=http%3A%2F%2Fjandan.net%2Fooxx%2Fpage-1301%26yid%3Dcomment-2650694&image=http%3A%2F%2Fww1.sinaimg.cn%2Fmw600%2Fa00dfa2agw1enxg54qbbfj20n40x6755.jpg&require=site%2Cvisitor%2Cnonce%2CserverTime%2Clang&site_ims=1420356603&lang_ims=1420356603&v=140327'
-    # print "the interface is %s"%some_interface
-    # html_parser=HTMLParser.HTMLParser()
-    # print "the unscaped is %s " %html_parser.unescape(some_interface)
-    print "Hello world"

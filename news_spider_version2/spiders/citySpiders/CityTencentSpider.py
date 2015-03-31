@@ -22,7 +22,7 @@ class CityTencentSpider(scrapy.Spider):
                 'http://zj.qq.com/news','http://ln.qq.com/news','http://js.qq.com/news/index.html'
     ]
 
-    start_urls=['http://sh.qq.com/a/20150209/008426.htm']
+    # start_urls=['http://sh.qq.com/a/20150209/008426.htm']
 
     root_class='36度'
     #一级分类下面的频道
