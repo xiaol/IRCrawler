@@ -82,8 +82,27 @@ class GoogleNewsItem(scrapy.Item):
     sourceUrl=scrapy.Field()
     #源网站的名称
     sourceSiteName=scrapy.Field()
-    relatedUrl=scrapy.Field()
+    relate=scrapy.Field()
+    originsourceSiteName=scrapy.Field()
 
+
+
+
+class TaskItem(scrapy.Item):
+    # item 的唯一标识 用源网址
+    url=scrapy.Field()
+    title=scrapy.Field()
+    updateTime=scrapy.Field()
+    contentOk=scrapy.Field()
+    weiboOk=scrapy.Field()
+    zhihuOk=scrapy.Field()
+    abstractOk=scrapy.Field()
+    nerOk=scrapy.Field()
+    baikeOk=scrapy.Field()
+    baiduSearchOk=scrapy.Field()
+    doubanOk=scrapy.Field()
+    relateImgOk=scrapy.Field()
+    isOnline=scrapy.Field()
 
 
 class PartialNewsItem(scrapy.Item):

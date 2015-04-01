@@ -4,17 +4,32 @@ import json
 from news_spider_version2.items import NewsItem, GoogleNewsItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
+import datetime
+# import urlparse
+# import HTMLParser
+# import urllib2
+# import charade
+# import jpype
+
 
 
 import scrapy
 import re
 
 import HTMLParser
+#
+# InputSource        = jpype.JClass('org.xml.sax.InputSource')
+# StringReader       = jpype.JClass('java.io.StringReader')
+# HTMLHighlighter    = jpype.JClass('de.l3s.boilerpipe.sax.HTMLHighlighter')
+# BoilerpipeSAXInput = jpype.JClass('de.l3s.boilerpipe.sax.BoilerpipeSAXInput')
+
+
 
 
 class GoogleFocusNewsSpider(scrapy.Spider):
     name='GoogleFocusNews'
 
+    not_allowed_domains=['cn.china.cn/']
     # allowed_domains=['news.google.com.hk']
 
     start_urls=['https://news.google.com.hk/nwshp?hl=zh-CN&tab=wn']
@@ -22,18 +37,29 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_directry2.html']
 
     # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry2.html']
-
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry7.html']
 
 
     # start_urls=['http://www.chinanews.com/gn/2015/03-09/7113590.shtml']
     # start_urls=['http://world.yam.com/post.php?id=3292']
     # start_urls=['http://world.yam.com/post.php?id=3296']
 
+    # start_urls=['http://www.chinanews.com/gn/2015/03-17/7136760.shtml']
+    # start_urls=['http://news.tom.com/2015-03-17/OKV9/02844694.html']
+    # start_urls=['http://www.afinance.cn/new/gncj/201503/829193.html']
+    # start_urls=['http://news.southcn.com/community/content/2015-03/17/content_120232147.htm']
+    # start_urls=['http://blog.ifeng.com/article/35148399.html?touping']
+    # start_urls=['http://news.ifeng.com/a/20150316/43351164_0.shtml']
+
+
+
+
+
     root_class='40度'
     #一级分类下面的频道
     default_channel='最热门'
      #源网站的名称
-    sourceSiteName='谷歌焦点新闻'
+    sourceSiteName={'focus':'谷歌焦点新闻','nondomestic':'谷歌国际/港台新闻','domestic':'谷歌内地新闻','finance':'谷歌财经新闻','entertainment':'谷歌娱乐新闻','tech':'谷歌科技新闻','sport':'谷歌体育新闻'}
 
 
     url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -43,13 +69,13 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
 
 
-    title_pat1=re.compile(r'<h2>(.+?)</h2>')
-    title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
+    title_pat=re.compile(ur'(.+?)[_-▏]')
+
     partial_title_pat=re.compile(r'<span class="titletext">(.*?)</span>')
 
     tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
 
-    time_pat=re.compile(r'<time.*?>(.*?)</time>')
+    time_pat=re.compile(r'<span class="al-attribution-timestamp">(.*?)</span>')
     digital_pat=re.compile(r'\d+')
 
     content_pat=re.compile(r'<p>.*?</p>|<img.*?>',re.DOTALL)
@@ -59,21 +85,43 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
     previous_page_pat=re.compile(r'<a href="(.*?)">»</a>')
 
-    nonpage_url_pat=re.compile(r'<h2 class="esc-lead-article-title"><a.*?url="(.*?\.[s]?htm[l]?)"[^>]*?><span class="titletext">')
+    nonpage_url_pat=re.compile(r'<h2 class="esc-lead-article-title"><a.*?url="(.*?)"[^>]*?><span class="titletext">')
     # =re.compile(r'<h2 class="esc-lead-article-title"><a.*?url=".*?\.[s]?htm[l]?"[^>]*?><span class="titletext">|<span class="media-strip-item-state"><a.*?url=".*?\.[s]?htm[l]?"[^>]*?><div class="item-image-wrapper">')
-    nonpage_url_pat_search=re.compile(r'<h2 class="esc-lead-article-title"><a.*?url="(.*?\.[s]?htm[l]?[^>]*?)"[^>]*?><span class="titletext">|<span class="media-strip-item-state"><a.*?url="(.*?\.[s]?htm[l]?)"[^>]*?><div class="item-image-wrapper">')
+    nonpage_url_pat_search=re.compile(r'<h2 class="esc-lead-article-title"><a.*?url="(.*?)"[^>]*?><span class="titletext">|<span class="media-strip-item-state"><a.*?url="(.*?\.[s]?htm[l]?)"[^>]*?><div class="item-image-wrapper">')
     # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
 
     partial_description_pat=re.compile(r'<div class="esc-lead-snippet-wrapper">(.*?)</div>')
 
-    bottom_page_url_pat=re.compile(r'<span class="media-strip-item-state"><a.*?url="(.*?\.[s]?[htm]?[l]?[^<^>]*?)"[^<^>]*?><div class="item-image-wrapper">')
 
-    middle_page_url_pat=re.compile(r'<div class="esc-secondary-article-title-wrapper"><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><span')
+    bottom_page_pat=re.compile(r'<span class="media-strip-item-state"><a.*?url=".*?"[^<^>]*?><div class="item-image-wrapper">.*?</label>')
+    bottom_page_url_pat=re.compile(r'<span class="media-strip-item-state"><a.*?url="(.*?)"[^<^>]*?><div class="item-image-wrapper">')
+    # bottom_page_title_pat=re.compile(r'<label class="media-strip-item-label">(.*?)</label>')
+    bottom_page_sourcesitename_pat=re.compile(r'<label class="media-strip-item-label">(.*?)</label>')
 
-    opinion_page_url_pat=re.compile(ur'<label class="esc-diversity-article-category">观点：</label><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><span')
-    deep_report_page_url_pat=re.compile(ur'<label class="esc-diversity-article-category">深入报道：</label><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><span')
 
-    left_page_url_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail".*?><a.*?url="(.*?\.[s]?htm[l]?[^<^>]*?)"[^<^>]*?><div')
+    middle_page_pat=re.compile(r'<div class="esc-secondary-article-title-wrapper"><a.*?url=".*?"[^<^>]*?><span.*?</label></div></div>')
+    middle_page_url_pat=re.compile(r'<div class="esc-secondary-article-title-wrapper"><a.*?url="(.*?)"[^<^>]*?><span')
+
+    middle_page_title_pat=re.compile(r'<span class="titletext">(.*?)</span>')
+
+    middle_page_sourcesitename_pat=re.compile(ur'<label class=".*?">([^观点深入报道<>]*?)</label>')
+
+
+    opinion_page_pat=re.compile(ur'<label class="esc-diversity-article-category">观点：</label><a.*?url=".*?"[^<^>]*?><span.*?</label>')
+    opinion_page_url_pat=re.compile(ur'<label class="esc-diversity-article-category">观点：</label><a.*?url="(.*?)"[^<^>]*?><span')
+    # opinion_page_title_pat=re.compile(r'<span class="titletext">(.*?)</span>')
+    # opinion_page_sourcesitename_pat=re.compile(r'<label class=".*?">(.*?)</label>')
+
+    deep_report_page_pat=re.compile(ur'<label class="esc-diversity-article-category">深入报道：</label><a.*?url=".*?"[^<^>]*?><span.*?</label>')
+    deep_report_page_url_pat=re.compile(ur'<label class="esc-diversity-article-category">深入报道：</label><a.*?url="(.*?)"[^<^>]*?><span')
+    # deep_report_page_title_pat=re.compile(r'<span class="titletext">(.*?)</span>')
+    # deep_report_page_sourcesitename_pat=re.compile(r'<label class=".*?">(.*?)</label>')
+
+    left_page_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail".*?><a.*?url=".*?"[^<^>]*?><div.*?</label>')
+    left_page_url_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail".*?><a.*?url="(.*?)"[^<^>]*?><div')
+
+    originsourceSiteName_pat=re.compile(r'<span class="al-attribution-source">(.*?)</span>')
+
 
     end_content_str='以上图文只是杂志上很小的一部分……'
     start_content_str='-本文'
@@ -86,23 +134,25 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     }
 
 
+
+
     def parse(self,response):
 
-
+  
         url=response._get_url()
-        if  self.isPage(response,url):
+        if   self.isPage(response,url):
             yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
 
-            # for result in results:
-            #     yield(result)
+            for result in results:
+                yield(result)
 
 
     def isPage(self,response,url):
         if None==url:
             return False
-        if url.endswith(".html") or url.endswith(".shtml") or url.endswith(".htm"):
+        if url.endswith(".html") or url.endswith(".shtml") or url.endswith(".htm") or url.endswith("html?touping"):
             return True
         return False
 
@@ -112,10 +162,10 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         # item 的唯一标识 用源网址
         item=NewsItem()
         item['root_class']=self.extractRootClass(response)
-        item['updateTime']=self.extractTime(response)
-        item['title']=self.extractTitle(response)
-        item['content']=self.extractContent(response)
-        item['imgUrl']=self.extractImgUrl(response)
+        # item['updateTime']=self.extractTime(response)
+        item['title']=self.extractTitle(url)
+        item['content']=self.extractContent(url)
+        item['imgUrl']=self.extractImgUrl(url)
         item['sourceUrl']=url
         item['sourceSiteName']=self.extractSourceSiteName(response)
         item['tag']=self.extractTag(response)
@@ -123,33 +173,121 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         item['channel']=self.extractChannel(response,item)
         item['_id']=self.generateItemId(item)
 
-        item.printSelf()
+#        item.printSelf()
         return item
 
 
     def generateItemId(self,item):
         return item['sourceUrl']
 
-    def extractTitle(self,response):
+    # def extractTitle(self,response):
+    #
+    #     raw_title_str=response.xpath('//article[@class="mainBox xxx"]/header').extract()[0]
+    #     # raw_title_str=response.xpath('//div[@class="headerBar"]').extract()[0]
+    #     searchResult1=re.search(self.title_pat1,raw_title_str)
+    #
+    #     if searchResult1:
+    #         title=searchResult1.group(1)
+    #         # title=searchResult1.group(1)
+    #         return title
+    #     return None
 
-        raw_title_str=response.xpath('//article[@class="mainBox xxx"]/header').extract()[0]
-        # raw_title_str=response.xpath('//div[@class="headerBar"]').extract()[0]
-        searchResult1=re.search(self.title_pat1,raw_title_str)
 
-        if searchResult1:
-            title=searchResult1.group(1)
-            # title=searchResult1.group(1)
+    def extractTitle(self,sourceUrl):
+        if self.isFilterWebsite(sourceUrl):
+            return None
+        else:
+            rawContent=self.getHtmlContentUnicode(sourceUrl)
+        if rawContent==None:
+            return None
+
+        reader = StringReader(rawContent)
+        source = BoilerpipeSAXInput(InputSource(reader)).getTextDocument()
+        title=source.getTitle()
+
+        # extractor = jpype.JClass("de.l3s.boilerpipe.sax.ImageExtractor").INSTANCE
+        # images = extractor.process(source, rawContent)
+        # jpype.java.util.Collections.sort(images)
+
+        # extractor = Extractor(extractor='de.l3s.boilerpipe.sax.ImageExtractor', html=rawContent)
+        # extractor_title=extractor.getImages()   #getTitle()
+        # final ImageExtractor ie = ImageExtractor.INSTANCE;
+        # images = ie.process(url,extractor);
+
+        # extractor = Extractor(extractor='ArticleExtractor', html=rawContent)
+        # extracted_title = extractor.getText()
+        # extracted_text=self.removeUnWantedBeginnings(extracted_text)
+        print "extracted_title1,%s"%title
+        title=self.removeUnWantedTitle(title)
+        # title=title.split('▏ ')[0]
+
+        print "extracted_title2,%s"%title
+        return title
+
+    def removeUnWantedTitle(self,title_str):
+
+        searchResult=re.search(self.title_pat,title_str)
+
+        if searchResult:
+            title=searchResult.group(1)
             return title
         return None
 
+
+
+
     def extractTime(self,response):
-        raw_time_str=response.xpath('//div[@class="headerBar"]').extract()[0]
-        searchResult=re.search(self.time_pat,raw_time_str)
+
+        # raw_time_str=response.xpath('//td[@class="al-attribution-cell timestamp-cell"]/span[@class="al-attribution-timestamp"]').extract()
+        # print "raw,%s"%raw_time_str
+        searchResult=re.search(self.time_pat,str(response))
         if searchResult:
             time=searchResult.group(1)
-            return self.formatTime(time)
-        return CrawlerUtils.getDefaultTimeStr()
-     # 2015-01-07 11:50:09
+            # timestr=time.decode('unicode-escape')
+            # timestr=timestr.encode('utf8')
+            timestr=time
+            digitals=re.findall(self.digital_pat,timestr)
+            format='%Y-%m-%d %H:%M:%S'
+            # timeDelta=datetime.timedelta(milliseconds=3600*1000)
+            # defaultTime=(datetime.datetime.now()-timeDelta)
+            # defaultTimeStr=defaultTime.strftime(format)
+            # return defaultTimeStr
+
+            if  timestr.endswith('分钟前‎'):
+                timeDelta=datetime.timedelta(milliseconds=60*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+
+            elif  timestr.endswith('小时前‎'):
+                timeDelta=datetime.timedelta(milliseconds=3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+            elif timestr.endswith('天前'):
+                timeDelta=datetime.timedelta(milliseconds=24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+            elif timestr.endswith('周前'):
+                timeDelta=datetime.timedelta(milliseconds=7*24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+
+            elif timestr.endswith('月前'):
+                timeDelta=datetime.timedelta(milliseconds=4*7*24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+
+            elif timestr.endswith('年前'):
+                timeDelta=datetime.timedelta(milliseconds=12*4*7*24*3600*1000*int(digitals[0]))
+                defaultTime=(datetime.datetime.now()-timeDelta)
+            else:
+                return CrawlerUtils.getDefaultTimeStr()
+        else:
+            return CrawlerUtils.getDefaultTimeStr()
+
+        defaultTimeStr=defaultTime.strftime(format)
+        return defaultTimeStr
+
+
+
     def formatTime(self,timeStr):
         digitals=re.findall(self.digital_pat,timeStr)
         resultArr=[]
@@ -180,47 +318,122 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         #     return channel
         return self.default_channel
 
-    def extractContent(self,response):
-        rawContent=response.xpath('//article[@class="mainBox xxx"]').extract()
-        if not len(rawContent):
-            return None
-        listInfos=[]
 
-        find_result=re.findall(self.content_pat,rawContent[0])
-        # print "rawcontent %s" %find_result
-        for line in find_result:
-            # print "line,%s"%line
-            imgSearch=re.search(self.img_pat,line)
-            if imgSearch:
-                listInfos.append({'img':imgSearch.group(1)})
-                # print "img is %s" %imgSearch.group(1)
+
+    def isFilterWebsite(self,url):
+        if None==url:
+            return True
+        for not_allowed_url in self.not_allowed_domains:
+            if not_allowed_url in url:
+                return True
+        return False
+
+    def getHtmlContentUnicode(self,url):
+        # headers={'User-Agent': 'Mozilla/5.0'}
+        try:
+            request=urllib2.Request(url)
+            connection=urllib2.urlopen(request,timeout=5)
+            data=connection.read()
+            encoding=connection.headers['content-type'].lower().split('charset=')[-1]
+            if encoding.lower() == 'text/html':
+                encoding = charade.detect(data)['encoding']
+            # if encoding.lower()=='gb2312':
+            #     encoding='gbk'
+            if encoding:
+                data = data.decode(encoding=encoding,errors='ignore')
+            return data
+        except Exception,e:
+            print str(e)
+            return None
+
+    def removeUnWantedBeginnings(self,content):
+        contentParas=content.split('\n')
+        deleteMode=True
+        resultArr=[]
+        for para in contentParas:
+            resultPara=None
+            if not deleteMode:
+                resultPara=self.formatSentence(para)
             else:
-                txtSearch=re.search(self.para_pat,line)
-                if txtSearch:
-                    result=txtSearch.group(1)
-                    result=CrawlerUtils.removeParasedCode(result)
-                    result=CrawlerUtils.removeScript(result)
-                    result=CrawlerUtils.removeUnwantedTag(result)
-                    if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
-                        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
-                        if self.start_content_str in result:
-                            return False
-                        if self.end_content_str in result:
-                            break
-                        print "txt is :%s" %result
-                        listInfos.append({'txt':result})
-        # print  "listInfos,%s" %listInfos
-        return CrawlerUtils.make_img_text_pair(listInfos)
+                checkState=self.isUnwantedBeginnings(para)
+                if not checkState:
+                    deleteMode=False
+                    resultPara=self.formatSentence(para)
+            if resultPara:
+                resultArr.append(resultPara)
 
-    def extractImgUrl(self,response):
-        rawContent=response.xpath('//article[@class="mainBox xxx"]').extract()
-        if not len(rawContent):
+        return ''.join(resultArr)
+
+    def formatSentence(self,para):
+        if para==None:
             return None
-        for line in re.findall(self.content_pat,rawContent[0]):
-            imgSearch=re.search(self.img_pat,line)
-            if imgSearch:
-                # print "imgsearch,%s" %imgSearch.group(1)
-                return imgSearch.group(1)
+        if CrawlerUtils.isAllSpaces(para):
+            return None
+        result=para
+
+        result=result.replace('\t','')
+        result=result.replace(u'\xa0', '')
+        result=result.replace(CrawlerUtils.Q_space,'')
+        result=result.strip()
+        result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result+'\n\n'
+        return result
+
+    def isUnwantedBeginnings(self,para):
+        fromSoureBeginPat=re.compile(r'^来源[：:]')
+        unWantedBegining='分享到：'
+        paraArr=re.split(re.compile(r'\s+'),para)
+        for elem in paraArr:
+            if re.match(fromSoureBeginPat,elem):
+                return True
+        if len(paraArr)>3:
+            return True
+        if para.startswith(unWantedBegining):
+            return True
+        return False
+
+    def extractContent(self,sourceUrl):
+        if self.isFilterWebsite(sourceUrl):
+            return None
+        else:
+            rawContent=self.getHtmlContentUnicode(sourceUrl)
+        if rawContent==None:
+            return None
+        extractor = Extractor(extractor='ArticleExtractor', html=rawContent)
+        extracted_text = extractor.getText()
+        extracted_text=self.removeUnWantedBeginnings(extracted_text)
+        print "extracted_text,%s"%extracted_text
+        return extracted_text
+
+
+
+    def extractImgUrl(self,sourceUrl):
+        if self.isFilterWebsite(sourceUrl):
+            return None
+        else:
+            rawContent=self.getHtmlContentUnicode(sourceUrl)
+        if rawContent==None:
+            return None
+
+        reader = StringReader(rawContent)
+        source = BoilerpipeSAXInput(InputSource(reader)).getTextDocument()
+        # title=source.getTitle()
+
+        # extractor = jpype.JClass("de.l3s.boilerpipe.sax.ImageExtractor").INSTANCE
+        # images = extractor.process(source, rawContent)
+        # jpype.java.util.Collections.sort(images)
+
+        extractor = Extractor(extractor='de.l3s.boilerpipe.sax.ImageExtractor', html=rawContent)
+        extractor_title=extractor.getImages()   #getTitle()
+        # final ImageExtractor ie = ImageExtractor.INSTANCE;
+        # images = ie.process(url,extractor);
+
+        # extractor = Extractor(extractor='ArticleExtractor', html=rawContent)
+        # extracted_title = extractor.getText()
+        # extracted_text=self.removeUnWantedBeginnings(extracted_text)
+        print "extracted_title1,%s"%title
+        title=self.removeUnWantedTitle(title)
+        print "extracted_title2,%s"%title
+
         return None
 
     def extractDesc(self,response):
@@ -239,11 +452,113 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         return None
 
 
+
+    #处理不是页面的网址
+
+
+
     #处理不是页面的网址
     def dealWtihNonPage(self,response,url):
-        # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
-        pages_arr=response.xpath('//div[@class="section top-stories-section"]/div[@class="section-content"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
-        for theme_page in pages_arr:
+        pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
+        focus_pages_arr=response.xpath('//div[@class="section top-stories-section"]/div[@class="section-content"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+
+        request_items=[]
+        for theme_page in focus_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['focus']
+            if partial_item:
+                request_items.append(partial_item)
+            #     MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+            #
+                # request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+        nondomestic_pages_arr=response.xpath('//div[@class="section-list"]/div[@class="section-list-content"]/div[@class="section story-section section-zh-CN_cn-w"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+        for theme_page in nondomestic_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['nondomestic']
+            if partial_item:
+                request_items.append(partial_item)
+            #     MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+                # request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+
+        domestic_pages_arr=response.xpath('//div[@class="section-list"]/div[@class="section-list-content"]/div[@class="section story-section section-zh-CN_cn-n"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+        for theme_page in domestic_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['domestic']
+            if partial_item:
+                request_items.append(partial_item)
+            #     MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+            #     # request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+
+        finance_pages_arr=response.xpath('//div[@class="section-list"]/div[@class="section-list-content"]/div[@class="section story-section section-zh-CN_cn-b"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+        for theme_page in finance_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['finance']
+            if partial_item:
+                request_items.append(partial_item)
+            #     MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+            #     # request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+        entertainment_pages_arr=response.xpath('//div[@class="section-list"]/div[@class="section-list-content"]/div[@class="section story-section section-zh-CN_cn-e"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+        for theme_page in entertainment_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['entertainment']
+            if partial_item:
+                request_items.append(partial_item)
+            #     MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+            #     # request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+
+        tech_pages_arr=response.xpath('//div[@class="section-list"]/div[@class="section-list-content"]/div[@class="section story-section section-zh-CN_cn-t"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+        for theme_page in tech_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['tech']
+            if partial_item:
+                request_items.append(partial_item)
+            #     print "hello"
+            #     MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+            #     # request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+
+        sport_pages_arr=response.xpath('//div[@class="section-list"]/div[@class="section-list-content"]/div[@class="section story-section section-zh-CN_cn-s"]/div/div/div/div[@class="esc-body"]')  #/li[@class="box masonry-brick"
+
+        for theme_page in sport_pages_arr:
+            partial_item,url_list=self.generatePartialItem(theme_page)
+            partial_item['sourceSiteName']=self.sourceSiteName['sport']
+
+            if partial_item:
+                request_items.append(partial_item)
+                # MongoUtils.saveGoogleItem(partial_item)
+            # for url in url_list:
+            #     print "Url is %s" %url
+            #     request_items.append(scrapy.Request(url,callback=self.parse,dont_filter=False))
+
+
+        return request_items
+
+
+    def generatePartialItem(self,theme_page):
+
             print "theme_page,%s"%theme_page.extract()
             theme_page=theme_page.extract()
             theme_page_url=re.findall(self.nonpage_url_pat,theme_page)
@@ -251,54 +566,174 @@ class GoogleFocusNewsSpider(scrapy.Spider):
             partial_item=GoogleNewsItem()
             partial_item['sourceUrl']=theme_page_url[0]
             partial_item['_id']=theme_page_url[0]
+
             title=re.findall(self.partial_title_pat,theme_page)
             partial_item['title']=title[0]
             print "title,%s"%partial_item['title']
-
             description=re.findall(self.partial_description_pat,theme_page)
-            partial_item['description']=description
+            partial_item['description']=description[0]
             print "description,%s"%partial_item['description']
 
-            partial_item['updateTime']=CrawlerUtils.getDefaultTimeStr()
+            originsourceSiteName=re.findall(self.originsourceSiteName_pat,theme_page)
+            partial_item['originsourceSiteName']=originsourceSiteName[0]
+            print "originsourceSiteName,%s"%partial_item['originsourceSiteName']
+            # partial_item['updateTime']=CrawlerUtils.getDefaultTimeStr()
+            partial_item['updateTime']=self.extractTime(theme_page)
 
-            related_url=[]
-            bottom_page_url=re.findall(self.bottom_page_url_pat,theme_page)
-            for new_page_url in bottom_page_url:
-                print "new_page_url,%s"%new_page_url
-                related_url.append(({'bottom':new_page_url}))
+            url_list=[]
+            url_list.append(partial_item['sourceUrl'])
 
-            middle_page_url=re.findall(self.middle_page_url_pat,theme_page)
-            for new_page_url in middle_page_url:
-                print "new_page_url,%s"%new_page_url
-                related_url.append(({'middle':new_page_url}))
+            relate={}
 
-            opinion_page_url=re.findall(self.opinion_page_url_pat,theme_page)
-            if opinion_page_url:
-                for new_page_url in opinion_page_url:
-                    print "new_page_url,%s"%new_page_url
-                    related_url.append(({'opinion':new_page_url}))
 
-            deep_report_page_url=re.findall(self.deep_report_page_url_pat,theme_page)
-            if deep_report_page_url:
-                for new_page_url in deep_report_page_url:
-                    print "new_page_url,%s"%new_page_url
-                    related_url.append(({'deep_report':new_page_url}))
+            bottom=[]
+            middle=[]
+            opinion=[]
+            deep_report=[]
+            left=[]
 
-            left_page_url=re.findall(self.left_page_url_pat,theme_page)
-            if left_page_url:
-                for new_page_url in left_page_url:
-                    print "new_page_url,%s"%new_page_url
-                    related_url.append(({'left':new_page_url}))
+            # bottom_page=re.findall(self.bottom_page_pat,theme_page)
+            # for new_page in bottom_page:
+            #     bottomItem={}
+            #     new_page_url=re.search(self.bottom_page_url_pat,new_page)
+            #     if new_page_url:
+            #         new_page_url=new_page_url.group(1)
+            #         print "bottom_new_page_url,%s"%new_page_url
+            #
+            #     new_page_sourcesitename=re.search(self.bottom_page_sourcesitename_pat,new_page)
+            #     if new_page_sourcesitename:
+            #         new_page_sourcesitename=new_page_sourcesitename.group(1)
+            #         print "bottom_new_page_sourcesitename,%s"%new_page_sourcesitename
+            #     bottomItem['url']=new_page_url
+            #     bottomItem['sourceSitename']=new_page_sourcesitename
+            #     bottomItem['title']=None
+            #     bottom.append(bottomItem)
+            #     # bottom.append()
+            #     # related.append(({'bottom':new_page_url}))
+            #     url_list.append(new_page_url)
 
-            partial_item['relatedUrl']=related_url
+
+            middle_page=re.findall(self.middle_page_pat,theme_page)
+            for new_page in middle_page:
+                middleItem={}
+                new_page_url=re.search(self.middle_page_url_pat,new_page)
+                if new_page_url:
+                    new_page_url=new_page_url.group(1)
+                    print "middle_new_page_url,%s"%new_page_url
+
+                new_page_title=re.search(self.middle_page_title_pat,new_page)
+                if new_page_title:
+                    new_page_title=new_page_title.group(1)
+                    print "middle_new_page_title,%s"%new_page_title
+                new_page_sourcesitename=re.search(self.middle_page_sourcesitename_pat,new_page)
+                if new_page_sourcesitename:
+                    new_page_sourcesitename=new_page_sourcesitename.group(1)
+                    print "middle_new_page_sourcesitename,%s"%new_page_sourcesitename
+
+
+                middleItem['url']=new_page_url
+                middleItem['sourceSitename']=new_page_sourcesitename
+                middleItem['title']=new_page_title
+                # related_url.append(({'middle':new_page_url}))
+                middle.append(middleItem)
+                url_list.append(new_page_url)
+
+            opinion_page=re.findall(self.opinion_page_pat,theme_page)
+
+            if opinion_page:
+
+                opinionItem={}
+                for new_page in opinion_page:
+                    new_page_url=re.search(self.opinion_page_url_pat,new_page)
+                    if new_page_url:
+                        new_page_url=new_page_url.group(1)
+                        print "opinion_new_page_url,%s"%new_page_url
+
+                    new_page_title=re.search(self.middle_page_title_pat,new_page)
+                    if new_page_title:
+                        new_page_title=new_page_title.group(1)
+                        print "opinion_new_page_title,%s"%new_page_title
+                    new_page_sourcesitename=re.search(self.middle_page_sourcesitename_pat,new_page)
+                    if new_page_sourcesitename:
+                        new_page_sourcesitename=new_page_sourcesitename.group(1)
+                        print "opinion_new_page_sourcesitename,%s"%new_page_sourcesitename
+
+                    opinionItem['url']=new_page_url
+                    opinionItem['sourceSitename']=new_page_sourcesitename
+                    opinionItem['title']=new_page_title
+                     # related_url.append(({'middle':new_page_url}))
+                    opinion.append(opinionItem)
+                    url_list.append(new_page_url)
+
+                    print "opinion_new_page_url,%s"%new_page_url
+
+                    # related_url.append(({'opinion':new_page_url}))
+                    url_list.append(new_page_url)
+
+
+            deep_report_page=re.findall(self.deep_report_page_pat,theme_page)
+            if deep_report_page:
+                deep_reportItem={}
+                for new_page in deep_report_page:
+                    new_page_url=re.search(self.deep_report_page_url_pat,new_page)
+                    if new_page_url:
+                        new_page_url=new_page_url.group(1)
+                        print "deep_report_new_page_url,%s"%new_page_url
+
+                    new_page_title=re.search(self.middle_page_title_pat,new_page)
+                    if new_page_title:
+                        new_page_title=new_page_title.group(1)
+                        print "deep_report_new_page_title,%s"%new_page_title
+
+                    new_page_sourcesitename=re.search(self.middle_page_sourcesitename_pat,new_page)
+                    if new_page_sourcesitename:
+                        new_page_sourcesitename=new_page_sourcesitename.group(1)
+                        print "deep_report_new_page_sourcesitename,%s"%new_page_sourcesitename
+
+                    deep_reportItem['url']=new_page_url
+                    deep_reportItem['sourceSitename']=new_page_sourcesitename
+                    deep_reportItem['title']=new_page_title
+                     # related_url.append(({'middle':new_page_url}))
+                    deep_report.append(deep_reportItem)
+                    url_list.append(new_page_url)
+                    print "deep_report_new_page_url,%s"%new_page_url
+                    # related_url.append(({'deep_report':new_page_url}))
+                    url_list.append(new_page_url)
+
+            left_page=re.findall(self.left_page_pat,theme_page)
+            if left_page:
+                leftItem={}
+                for new_page in left_page:
+                    new_page_url=re.search(self.left_page_url_pat,new_page)
+                    if new_page_url:
+                        new_page_url=new_page_url.group(1)
+                        print "left_new_page_url,%s"%new_page_url
+
+                    new_page_sourcesitename=re.search(self.middle_page_sourcesitename_pat,new_page)
+                    if new_page_sourcesitename:
+                        new_page_sourcesitename=new_page_sourcesitename.group(1)
+                        print "left_new_page_sourcesitename,%s"%new_page_sourcesitename
+
+                    leftItem['url']=new_page_url
+                    leftItem['sourceSitename']=new_page_sourcesitename
+                    leftItem['title']=None
+                    left.append(leftItem)
+
+                    # related_url.append(({'left':new_page_url}))
+                    url_list.append(new_page_url)
+            relate['bottom']=bottom
+            relate['middle']=middle
+            relate['opinion']=opinion
+            relate['deep_report']=deep_report
+            relate['left']=left
+
+            partial_item['relate']=relate
             partial_item['root_class']=self.root_class
             partial_item['channel']=self.default_channel
-            partial_item['sourceSiteName']=self.sourceSiteName
+            # partial_item['sourceSiteName']=self.sourceSiteName
             partial_item['imgUrl']=None
-            if partial_item:
-                MongoUtils.saveGoogleItem(partial_item)
 
-
+            return partial_item,url_list
 
 
 
@@ -323,27 +758,27 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     #                 request_items.append(scrapy.Request(partial_item['sourceUrl'],callback=self.parse,dont_filter=False))
     #     return request_items
 
-    def generatePartialItem(self,dom_elem,tag,city,parentUrl):
-        partial_item=PartialNewsItem()
-        partial_item['tag']=tag
-        partial_item['city']=city
-        print "city is %s" %city
-
-
-        source_url_arr=dom_elem.xpath('./a/@href').extract()
-        if not len(source_url_arr):
-            return None
-        source_url=source_url_arr[0]
-        if  not source_url.startswith('http'):
-            baseUrl=self.extractBaseUrl(parentUrl)
-            if baseUrl:
-                source_url=baseUrl+source_url
-        partial_item['sourceUrl']=source_url
-        partial_item['_id']=source_url
-        partial_item['imgUrl']=dom_elem.xpath('./a/img/@src').extract()[0]
-        partial_item['title']=dom_elem.xpath('./div[@class="info"]/h2/a/text()').extract()[0]
-        partial_item['description']=dom_elem.xpath('./div[@class="info"]/p/text()').extract()[0]
-        return partial_item
+    # def generatePartialItem(self,dom_elem,tag,city,parentUrl):
+    #     partial_item=PartialNewsItem()
+    #     partial_item['tag']=tag
+    #     partial_item['city']=city
+    #     print "city is %s" %city
+    #
+    #
+    #     source_url_arr=dom_elem.xpath('./a/@href').extract()
+    #     if not len(source_url_arr):
+    #         return None
+    #     source_url=source_url_arr[0]
+    #     if  not source_url.startswith('http'):
+    #         baseUrl=self.extractBaseUrl(parentUrl)
+    #         if baseUrl:
+    #             source_url=baseUrl+source_url
+    #     partial_item['sourceUrl']=source_url
+    #     partial_item['_id']=source_url
+    #     partial_item['imgUrl']=dom_elem.xpath('./a/img/@src').extract()[0]
+    #     partial_item['title']=dom_elem.xpath('./div[@class="info"]/h2/a/text()').extract()[0]
+    #     partial_item['description']=dom_elem.xpath('./div[@class="info"]/p/text()').extract()[0]
+    #     return partial_item
 
 
 
@@ -399,3 +834,14 @@ if __name__=='__main__':
     print "the interface is %s"%some_interface
     html_parser=HTMLParser.HTMLParser()
     print "the unscaped is %s " %html_parser.unescape(some_interface)
+
+    timestr='‎7小时前‎'
+    # timestr='7小时前'
+    print timestr.endswith('小时前‎')
+
+
+    print timestr.endswith(u'小时前')
+    # url = "http://www.l3s.de/web/page11g.do?sp=page11g&link=ln104g&stu1g.LanguageISOCtxParam=en";
+
+     # This can also be done in one line:
+    # txt=DefaultExtractor.INSTANCE.getText(url));

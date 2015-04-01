@@ -48,6 +48,8 @@ MONGODB_CRAWLED_COLLECTION="CrawledItems"
 MONGODB_ROOT_INFO_COLL = "rootInfo"
 MONGODB_ITEM_TO_ITEM_COLL="itemToItemColl"
 MONGODB_GOOGLE_ITEM_COLL="googleNewsItem"
+MONGODB_TASK_ITEM_COLL="Task"
+MONGODB_TITLE_COLL="titleItems"
 
 # 设置middleware
 SPIDER_MIDDLEWARES = {
@@ -65,3 +67,4 @@ COMMANDS_MODULE='news_spider_version2.commands'
 PHANTOM_LINK='http://127.0.0.1:8080/wd/hub'
 
 DOWNLOAD_TIMEOUT = 180 #3分钟
+

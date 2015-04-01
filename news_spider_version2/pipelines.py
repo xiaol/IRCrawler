@@ -9,7 +9,7 @@ from scrapy import log
 from scrapy.conf import settings
 from pymongo import ReadPreference
 from news_spider_version2.item_recommender.ItemRecommender import ItemRecommender
-from news_spider_version2.items import NewsItem, PartialNewsItem, NewsProductItem, SimilarItem
+from news_spider_version2.items import NewsItem, PartialNewsItem, NewsProductItem, SimilarItem,GoogleNewsItem,TaskItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
 
@@ -27,24 +27,27 @@ class NewsSpiderVersion2Pipeline(object):
         self.product_collection=db[settings['MONGODB_PRODUCT_COLLECTION']]
         self.item_to_item_collection=db[settings['MONGODB_ITEM_TO_ITEM_COLL']]
         self.googleColl=db[settings['MONGODB_GOOGLE_ITEM_COLL']]
+        self.titleColl=db[settings['MONGODB_TITLE_COLL']]
+        self.taskColl=db[settings['MONGODB_TASK_ITEM_COLL']]
+
 
 
     def process_item(self, item, spider):
         if type(item) is NewsItem:
             id=item['_id']
             scrapedItem={'_id':id}
-            if self.scrappedColl.find_one(scrapedItem):
-                log.msg("Item %s alread exists in  database " %(item['_id']),
-                    level=log.DEBUG, spider=spider)
-                return item
+            # if self.scrappedColl.find_one(scrapedItem):
+            #     log.msg("Item %s alread exists in  database " %(item['_id']),
+            #         level=log.DEBUG, spider=spider)
+            #     return item
             if id.startswith('http'):
                 id=CrawlerUtils.generateId(id)
                 item['_id']=id
                 scrapedItem={'_id':id}
-                if self.scrappedColl.find_one(scrapedItem):
-                    log.msg("Item %s alread exists in  database " %(item['_id']),
-                        level=log.DEBUG, spider=spider)
-                    return item
+                # if self.scrappedColl.find_one(scrapedItem):
+                #     log.msg("Item %s alread exists in  database " %(item['_id']),
+                #         level=log.DEBUG, spider=spider)
+                #     return item
             if None==item['content']:
                 return item
             if len(item['content'])==0:
@@ -76,4 +79,42 @@ class NewsSpiderVersion2Pipeline(object):
         elif type(item) is PartialNewsItem:
             self.partialColl.save(dict(item))
 
+        elif type(item) is GoogleNewsItem:
+            # print "hello"
+            # MongoUtils.saveGoogleItem(partial_item)
+            # id=item['_id']
+            # scrapedItem={'_id':id}
+            # if self.scrappedColl.find_one(scrapedItem):
+            #     log.msg("Item %s alread exists in  database " %(item['_id']),
+            #         level=log.DEBUG, spider=spider)
+            #     return item
+            print "google_news start save"
+            title=item['title']
+            titleItem={'title':title}
+            if self.googleColl.find_one(titleItem):
+                log.msg("Item %s alread exists in  database " %(item['_id']),
+                    level=log.DEBUG, spider=spider)
+                print "google news alread exists in database"
+                return item
+            self.googleColl.save(dict(item))
+            print "google_news end save"
+            Task=TaskItem()
+            url=item['sourceUrl']
+            title=item['title']
+            Task['url']=url
+            Task['title']=title
+            Task['updateTime']=CrawlerUtils.getDefaultTimeStr()
+            Task['contentOk']=0
+            Task['weiboOk']=0
+            Task['zhihuOk']=0
+            Task['abstractOk']=0
+            Task['nerOk']=0
+            Task['baikeOk']=0
+            Task['baiduSearchOk']=0
+            Task['doubanOk']=0
+            Task['relateImgOk']=0
+            Task['isOnline']=0
+            self.taskColl.save(dict(Task))
+
         return item
+
