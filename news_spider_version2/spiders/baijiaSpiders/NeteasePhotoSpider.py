@@ -2,7 +2,7 @@ __author__ = 'yangjiwen'
 #coding=utf-8
 import json
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
-from news_spider_version2.items import GoogleNewsItem, PartialNewsItem
+from news_spider_version2.items import GoogleNewsItem, PartialNewsItem,NewsItem
 from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
 
 import scrapy
@@ -14,7 +14,7 @@ import HTMLParser
 
 class NeteasePhotoSpider(scrapy.Spider):
     name='NeteasePhotoNews'
-    allowed_domains=['pic.news.163.com']
+    allowed_domains=['news.163.com']
 
     start_urls=['http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json'
                 ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/10/10/cacheMoreData.json'
@@ -25,7 +25,9 @@ class NeteasePhotoSpider(scrapy.Spider):
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
     # start_urls=['http://www.alibuybuy.com/posts/category/collection']
-    start_urls=['http://news.163.com/photoview/00AO0001/87877.html']
+    # start_urls=['http://news.163.com/photoview/00AO0001/87877.html']
+    # start_urls=['http://news.163.com/photoview/00AP0001/87852.html']
+    # start_urls=['http://news.163.com/photoview/00AP0001/87816.html']
 
 
     root_class='40度'
@@ -75,8 +77,8 @@ class NeteasePhotoSpider(scrapy.Spider):
             yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
-            # for result in results:
-            #     yield(result)
+            for result in results:
+                yield(result)
 
     def isPage(self,response,url):
             if None==url:
@@ -95,21 +97,20 @@ class NeteasePhotoSpider(scrapy.Spider):
         item['_id']=self.generateItemId(item)
         item['root_class']=self.extractRootClass(response)
         item['channel']=self.extractChannel(response,item) #社会 国内 国际
-        # item['updateTime']=self.extractTime(response)
-        # item['title']=self.extractTitle(response)
-        # item['content']=self.extractContent(response)
-        # item['imgUrl']=self.extractImgUrl(response)
-        item['sourceSiteName']=self.extractSourceSiteName(response)
+        item['updateTime']=None
+        item['createTime']=self.extractcreateTime(response)
+        item['title']=None
+        item['content']=None
+        item['imgUrls']=None
+        item['sourceSiteName']=self.extractSourceSiteName(response,item)
         item['relate']=self.extractrelate(response)
         item['originsourceSiteName']=self.extractoriginsourceSiteName(response)
         item['imgWall']=self.extractimgWall(response)
         item['tag']=self.extractTag(response)
         dict_obj=MongoUtils.findPartialItemById(item['_id'])
         item.cloneInfoFromDict(dict_obj)
-        item.printSelf()
+        # item.printSelf()
         return item
-
-
 
 
 
@@ -136,6 +137,9 @@ class NeteasePhotoSpider(scrapy.Spider):
 
             return title
         return None
+    def extractcreateTime(self,response):
+        return CrawlerUtils.getDefaultTimeStr()
+
 
     def extractTime(self,response):
 
@@ -240,7 +244,15 @@ class NeteasePhotoSpider(scrapy.Spider):
 
         return None
 
-    def extractSourceSiteName(self,response):
+    def extractSourceSiteName(self,response,item):
+        searchResult=re.search(self.channel_pat,item['sourceUrl'])
+        if searchResult:
+            channelkey=searchResult.group(1)
+        #     return self.default_channel
+            channel=self.channel_map[channelkey]  #item['tag'][0].lower().encode('utf-8')
+            if channel:
+                print "channel is %s " %channel
+                return "网易"+channel+"新闻图片"
 
         return self.sourceSiteName
 
@@ -310,11 +322,13 @@ class NeteasePhotoSpider(scrapy.Spider):
     def generatePartialItem(self,dict_obj):
         partial_item=PartialNewsItem()
         partial_item['content']=dict_obj['desc']
+        partial_item['description']=dict_obj['desc']
         partial_item['updateTime']=dict_obj['createdate']
         partial_item['sourceUrl']=dict_obj['seturl']
         partial_item['_id']=dict_obj['seturl']
         partial_item['imgUrl']=dict_obj['cover']
         partial_item['title']=dict_obj['setname']
+
         return partial_item
 
 

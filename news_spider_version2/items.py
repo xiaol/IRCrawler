@@ -76,7 +76,7 @@ class GoogleNewsItem(scrapy.Item):
     title=scrapy.Field()
     createTime=scrapy.Field()
      #item 的缩略图
-    imgUrl=scrapy.Field()
+    imgUrls=scrapy.Field()
     #item 生成的时间
     updateTime=scrapy.Field()
     #item 的描述
@@ -88,6 +88,36 @@ class GoogleNewsItem(scrapy.Item):
     originsourceSiteName=scrapy.Field()
     imgWall=scrapy.Field()
     tag=scrapy.Field()
+    content=scrapy.Field()
+
+    def cloneInfoFromDict(self,dict_obj):
+        keys=['title','root_class','channel','content','imgUrl',
+              'updateTime','sourceSiteName','description','sourceUrl','tag','city']
+        if dict_obj==None:
+            return
+        for key in keys:
+            if key in dict_obj:
+                if key=='imgUrl':
+                    self['imgUrls']=dict_obj[key]
+                else:
+                    self[key]=dict_obj[key]
+
+    def printSelf(self):
+        print " _id is %s" %self['_id']
+        print " title is %s" %self['title']
+        print "root_class is %s" %self['root_class']
+        print "channel is %s" %self['channel']
+        print "content is %s" %self['content']
+        print "imgUrl is %s" %self['imgUrl']
+        print "updateTime is %s" %self['updateTime']
+        print "sourceSiteName is %s" %self['sourceSiteName']
+        # print "description is %s" %self['description']
+        print "sourceUrl is %s" %self['sourceUrl']
+        print "tag is %s" %self['tag']
+
+
+
+
 
 
 
@@ -106,7 +136,9 @@ class TaskItem(scrapy.Item):
     baiduSearchOk=scrapy.Field()
     doubanOk=scrapy.Field()
     relateImgOk=scrapy.Field()
+    sourceSiteName=scrapy.Field()
     isOnline=scrapy.Field()
+
 
 
 class PartialNewsItem(scrapy.Item):

@@ -88,7 +88,13 @@ class NewsSpiderVersion2Pipeline(object):
             #     log.msg("Item %s alread exists in  database " %(item['_id']),
             #         level=log.DEBUG, spider=spider)
             #     return item
-            print "google_news start save"
+            print "google&163_news start save"
+
+            if None==item['title']:
+                return item
+            if len(item['title'])==0:
+                return item
+
             title=item['title']
             titleItem={'title':title}
             if self.googleColl.find_one(titleItem):
@@ -96,15 +102,23 @@ class NewsSpiderVersion2Pipeline(object):
                     level=log.DEBUG, spider=spider)
                 print "google news alread exists in database"
                 return item
+
             self.googleColl.save(dict(item))
-            print "google_news end save"
+            print "google&163_news end save"
             Task=TaskItem()
             url=item['sourceUrl']
             title=item['title']
             Task['url']=url
             Task['title']=title
             Task['updateTime']=CrawlerUtils.getDefaultTimeStr()
-            Task['contentOk']=0
+
+            if item['originsourceSiteName']=='网易新闻图片':
+                Task['contentOk']=1
+                Task['sourceSiteName']='网易新闻图片'
+            else:
+                Task['contentOk']=0
+                Task['sourceSiteName']='google新闻'
+
             Task['weiboOk']=0
             Task['zhihuOk']=0
             Task['abstractOk']=0
@@ -114,7 +128,7 @@ class NewsSpiderVersion2Pipeline(object):
             Task['doubanOk']=0
             Task['relateImgOk']=0
             Task['isOnline']=0
+
             self.taskColl.save(dict(Task))
 
         return item
-
