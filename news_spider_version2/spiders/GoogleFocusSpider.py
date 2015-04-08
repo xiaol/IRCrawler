@@ -137,8 +137,8 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
 
     def parse(self,response):
-
   
+
         url=response._get_url()
         if   self.isPage(response,url):
             yield self.dealWithPage(response,url)
@@ -286,7 +286,8 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         defaultTimeStr=defaultTime.strftime(format)
         return defaultTimeStr
 
-
+    def extractcreateTime(self,response):
+        return CrawlerUtils.getDefaultTimeStr()
 
     def formatTime(self,timeStr):
         digitals=re.findall(self.digital_pat,timeStr)
@@ -567,6 +568,8 @@ class GoogleFocusNewsSpider(scrapy.Spider):
             partial_item['sourceUrl']=theme_page_url[0]
             partial_item['_id']=theme_page_url[0]
 
+
+
             title=re.findall(self.partial_title_pat,theme_page)
             partial_item['title']=title[0]
             print "title,%s"%partial_item['title']
@@ -579,6 +582,9 @@ class GoogleFocusNewsSpider(scrapy.Spider):
             print "originsourceSiteName,%s"%partial_item['originsourceSiteName']
             # partial_item['updateTime']=CrawlerUtils.getDefaultTimeStr()
             partial_item['updateTime']=self.extractTime(theme_page)
+
+            partial_item['createTime']=self.extractcreateTime(theme_page)
+
 
             url_list=[]
             url_list.append(partial_item['sourceUrl'])

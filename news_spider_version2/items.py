@@ -41,6 +41,7 @@ class NewsItem(scrapy.Item):
     # 内容的地域
     city=scrapy.Field()
 
+
     def printSelf(self):
         print " _id is %s" %self['_id']
         print " title is %s" %self['title']
@@ -73,6 +74,7 @@ class GoogleNewsItem(scrapy.Item):
     #一级分类下面的频道
     channel=scrapy.Field()
     title=scrapy.Field()
+    createTime=scrapy.Field()
      #item 的缩略图
     imgUrl=scrapy.Field()
     #item 生成的时间
@@ -84,6 +86,8 @@ class GoogleNewsItem(scrapy.Item):
     sourceSiteName=scrapy.Field()
     relate=scrapy.Field()
     originsourceSiteName=scrapy.Field()
+    imgWall=scrapy.Field()
+    tag=scrapy.Field()
 
 
 
@@ -113,7 +117,7 @@ class PartialNewsItem(scrapy.Item):
     #一级分类下面的频道
     channel=scrapy.Field()
     title=scrapy.Field()
-
+    content=scrapy.Field()
      #item 的缩略图
     imgUrl=scrapy.Field()
     #item 生成的时间

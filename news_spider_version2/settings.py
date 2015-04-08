@@ -71,4 +71,4 @@ COMMANDS_MODULE='news_spider_version2.commands'
 PHANTOM_LINK='http://127.0.0.1:8080/wd/hub'
 
 DOWNLOAD_TIMEOUT = 180 #3分钟
-  
+
