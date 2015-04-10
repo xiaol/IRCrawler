@@ -17,10 +17,11 @@ class NeteasePhotoSpider(scrapy.Spider):
     allowed_domains=['news.163.com']
 
     start_urls=['http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/0/10/cacheMoreData.json'
-                ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/10/10/cacheMoreData.json'
-                ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/20/10/cacheMoreData.json'
                 ]
+                # ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/10/10/cacheMoreData.json'
+                # ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/20/10/cacheMoreData.json'
 
+        
 
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
