@@ -37,7 +37,7 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_directry2.html']
 
     # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry2.html']
-    start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry7.html']
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry7.html']
 
 
     # start_urls=['http://www.chinanews.com/gn/2015/03-09/7113590.shtml']
@@ -140,13 +140,13 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
 
         url=response._get_url()
-        if  not  self.isPage(response,url):
+        if   self.isPage(response,url):
             yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
 
             for result in results:
-                yield(result)
+                yield(result)  
 
 
     def isPage(self,response,url):
