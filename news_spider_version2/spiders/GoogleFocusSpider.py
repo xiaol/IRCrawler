@@ -39,21 +39,14 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry2.html']
     # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry7.html']
 
-
-    # start_urls=['http://www.chinanews.com/gn/2015/03-09/7113590.shtml']
-    # start_urls=['http://world.yam.com/post.php?id=3292']
-    # start_urls=['http://world.yam.com/post.php?id=3296']
-
-    # start_urls=['http://www.chinanews.com/gn/2015/03-17/7136760.shtml']
-    # start_urls=['http://news.tom.com/2015-03-17/OKV9/02844694.html']
-    # start_urls=['http://www.afinance.cn/new/gncj/201503/829193.html']
-    # start_urls=['http://news.southcn.com/community/content/2015-03/17/content_120232147.htm']
-    # start_urls=['http://blog.ifeng.com/article/35148399.html?touping']
-    # start_urls=['http://news.ifeng.com/a/20150316/43351164_0.shtml']
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_directory_xiaomi_noclick.html']
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_directory_xioami_click.html']
+    # start_urls=['file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/Google_direcotry_40_click.html']
 
 
 
 
+  
 
     root_class='40度'
     #一级分类下面的频道
@@ -117,8 +110,8 @@ class GoogleFocusNewsSpider(scrapy.Spider):
     # deep_report_page_title_pat=re.compile(r'<span class="titletext">(.*?)</span>')
     # deep_report_page_sourcesitename_pat=re.compile(r'<label class=".*?">(.*?)</label>')
 
-    left_page_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail".*?><a.*?url=".*?"[^<^>]*?><div.*?</label>')
-    left_page_url_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail".*?><a.*?url="(.*?)"[^<^>]*?><div')
+    left_page_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail[^"]*?".*?><a.*?url=".*?"[^<^>]*?><div.*?</label>')
+    left_page_url_pat=re.compile(r'<div class="esc-thumbnail-wrapper"><div class="esc-thumbnail-state"><div class="esc-thumbnail[^"]*?".*?><a.*?url="(.*?)"[^<^>]*?><div')
 
     originsourceSiteName_pat=re.compile(r'<span class="al-attribution-source">(.*?)</span>')
 
@@ -140,13 +133,13 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
 
         url=response._get_url()
-        if   self.isPage(response,url):
+        if  not True:  #self.isPage(response,url):
             yield self.dealWithPage(response,url)
         else:
             results=self.dealWtihNonPage(response,url)
 
             for result in results:
-                yield(result)  
+                yield(result)
 
 
     def isPage(self,response,url):
