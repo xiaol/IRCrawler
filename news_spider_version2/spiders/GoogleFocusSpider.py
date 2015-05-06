@@ -46,7 +46,6 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
 
 
-  
 
     root_class='40度'
     #一级分类下面的频道
@@ -551,6 +550,13 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         return request_items
 
 
+    def trim_bracket(self, title):
+        print "title,%s"%title
+        bracket_pat=re.compile(r'\(.*?\)')
+        title=re.sub(bracket_pat, '', title)
+        return title
+
+
     def generatePartialItem(self,theme_page):
 
             print "theme_page,%s"%theme_page.extract()
@@ -564,7 +570,9 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
 
             title=re.findall(self.partial_title_pat,theme_page)
-            partial_item['title']=title[0]
+            partial_item['title']=self.trim_bracket(title[0])
+
+
             print "title,%s"%partial_item['title']
             description=re.findall(self.partial_description_pat,theme_page)
             partial_item['description']=description[0]
@@ -591,25 +599,25 @@ class GoogleFocusNewsSpider(scrapy.Spider):
             deep_report=[]
             left=[]
 
-            # bottom_page=re.findall(self.bottom_page_pat,theme_page)
-            # for new_page in bottom_page:
-            #     bottomItem={}
-            #     new_page_url=re.search(self.bottom_page_url_pat,new_page)
-            #     if new_page_url:
-            #         new_page_url=new_page_url.group(1)
-            #         print "bottom_new_page_url,%s"%new_page_url
-            #
-            #     new_page_sourcesitename=re.search(self.bottom_page_sourcesitename_pat,new_page)
-            #     if new_page_sourcesitename:
-            #         new_page_sourcesitename=new_page_sourcesitename.group(1)
-            #         print "bottom_new_page_sourcesitename,%s"%new_page_sourcesitename
-            #     bottomItem['url']=new_page_url
-            #     bottomItem['sourceSitename']=new_page_sourcesitename
-            #     bottomItem['title']=None
-            #     bottom.append(bottomItem)
-            #     # bottom.append()
-            #     # related.append(({'bottom':new_page_url}))
-            #     url_list.append(new_page_url)
+            bottom_page=re.findall(self.bottom_page_pat,theme_page)
+            for new_page in bottom_page:
+                bottomItem={}
+                new_page_url=re.search(self.bottom_page_url_pat,new_page)
+                if new_page_url:
+                    new_page_url=new_page_url.group(1)
+                    print "bottom_new_page_url,%s"%new_page_url
+
+                new_page_sourcesitename=re.search(self.bottom_page_sourcesitename_pat,new_page)
+                if new_page_sourcesitename:
+                    new_page_sourcesitename=new_page_sourcesitename.group(1)
+                    print "bottom_new_page_sourcesitename,%s"%new_page_sourcesitename
+                bottomItem['url']=new_page_url
+                bottomItem['sourceSitename']=new_page_sourcesitename
+                bottomItem['title']=None
+                bottom.append(bottomItem)
+                # bottom.append()
+                # related.append(({'bottom':new_page_url}))
+                url_list.append(new_page_url)
 
 
             middle_page=re.findall(self.middle_page_pat,theme_page)
@@ -632,7 +640,7 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
                 middleItem['url']=new_page_url
                 middleItem['sourceSitename']=new_page_sourcesitename
-                middleItem['title']=new_page_title
+                middleItem['title']=self.trim_bracket(new_page_title)
                 # related_url.append(({'middle':new_page_url}))
                 middle.append(middleItem)
                 url_list.append(new_page_url)
@@ -659,7 +667,7 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
                     opinionItem['url']=new_page_url
                     opinionItem['sourceSitename']=new_page_sourcesitename
-                    opinionItem['title']=new_page_title
+                    opinionItem['title']=self.trim_bracket(new_page_title)
                      # related_url.append(({'middle':new_page_url}))
                     opinion.append(opinionItem)
                     url_list.append(new_page_url)
@@ -691,7 +699,7 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
                     deep_reportItem['url']=new_page_url
                     deep_reportItem['sourceSitename']=new_page_sourcesitename
-                    deep_reportItem['title']=new_page_title
+                    deep_reportItem['title']=self.trim_bracket(new_page_title)
                      # related_url.append(({'middle':new_page_url}))
                     deep_report.append(deep_reportItem)
                     url_list.append(new_page_url)

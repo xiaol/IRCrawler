@@ -21,7 +21,7 @@ class NeteasePhotoSpider(scrapy.Spider):
                 # ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/10/10/cacheMoreData.json'
                 # ,'http://pic.news.163.com/photocenter/api/list/0001/00AN0001,00AO0001,00AP0001/20/10/cacheMoreData.json'
 
-        
+
 
     # start_urls=['http://www.pingwest.com/nexus-9-keyboard-folio-review/']
     # start_urls=['http://www.pingwest.com/10-things-you-need-know-about-windows-10/']
@@ -253,7 +253,7 @@ class NeteasePhotoSpider(scrapy.Spider):
             channel=self.channel_map[channelkey]  #item['tag'][0].lower().encode('utf-8')
             if channel:
                 print "channel is %s " %channel
-                return "网易"+channel+"新闻图片"
+                return "网易"+channel+"新闻"
 
         return self.sourceSiteName
 
