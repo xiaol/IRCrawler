@@ -1,7 +1,7 @@
 #coding=utf-8
 import urllib2
 
-# import charade
+import charade
 
 # from myproject.spiders.utils import AreaReader, CrawlerUtils
 import requests
@@ -51,6 +51,13 @@ class GoogleSearchSpider(scrapy.Spider):
         self.keyword_pattern = re.compile(r'http://news.baidu.com/ns\?word=(.*?)&.*?')
         self.comment_pattern = re.compile(r'boardId = "(.*?)"')
         self.infoStr_pattern = re.compile(r'replyData=({.*?});', re.DOTALL)
+        url_response=self.getHtmlContentUnicode(self.start_urls[0])
+        print "url_response,%s"%url_response
+        r = requests.get(self.start_urls[0])
+        dom = etree.HTML(r.text)
+        print "r.txt,%s"%r.text
+
+
 
 
 
@@ -156,12 +163,14 @@ class GoogleSearchSpider(scrapy.Spider):
 
     def parse(self,response):
 
+        print "response,%s"%response
         items=[]
         itemMetas=[]
         # keyword=self.getKeyword(response)
         #
         # news_blocks=response.xpath('//ul')[0]
         # news_block_items=news_blocks.xpath('./li')
+
         news_block_items=response.xpath('//div[@class="srg"]/li[@class="g"]')[0]
         news_block_items_ex=[]
         news_block_items_ex.append(news_block_items)
