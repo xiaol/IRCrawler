@@ -1,7 +1,7 @@
 #coding=utf-8
 import urllib2
 
-import charade
+# import charade
 
 # from myproject.spiders.utils import AreaReader, CrawlerUtils
 import requests
@@ -17,7 +17,7 @@ import urlparse
 # from utils.AreaReader import AreaReader
 # from utils.CrawlerUtils import CrawlerUtils
 import urllib, cStringIO
-from PIL import Image
+# from PIL import Image
 import json
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 
