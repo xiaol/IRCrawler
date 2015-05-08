@@ -9,7 +9,7 @@ from scrapy import log
 from scrapy.conf import settings
 from pymongo import ReadPreference
 from news_spider_version2.item_recommender.ItemRecommender import ItemRecommender
-from news_spider_version2.items import NewsItem, PartialNewsItem, NewsProductItem, SimilarItem,GoogleNewsItem,TaskItem
+from news_spider_version2.items import NewsItem, PartialNewsItem, NewsProductItem, SimilarItem,GoogleNewsItem,TaskItem,CommentItem
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 from news_spider_version2.spiders.utils.MongoUtils import MongoUtils
 
@@ -29,6 +29,7 @@ class NewsSpiderVersion2Pipeline(object):
         self.googleColl=db[settings['MONGODB_GOOGLE_ITEM_COLL']]
         self.titleColl=db[settings['MONGODB_TITLE_COLL']]
         self.taskColl=db[settings['MONGODB_TASK_ITEM_COLL']]
+        self.commentColl=db[settings['MONGODB_COMMENT_COLL']]
 
 
 
@@ -130,5 +131,19 @@ class NewsSpiderVersion2Pipeline(object):
             Task['isOnline']=0
 
             self.taskColl.save(dict(Task))
+
+
+        elif type(item) is CommentItem:
+            print "google_search start save"
+            id=item['_id']
+            idItem={'_id':id}
+            if self.commentColl.find_one(idItem):
+                log.msg("Item %s alread exists in  database " %(item['_id']),
+                    level=log.DEBUG, spider=spider)
+                print "google_search url alread exists in database"
+                return item
+            self.commentColl.save(dict(item))
+            print "google_search url end save"
+
 
         return item

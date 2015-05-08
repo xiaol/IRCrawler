@@ -281,3 +281,21 @@ class SimilarItem(scrapy.Item):
     #     for key in keys:
     #         if key in dict_obj:
     #             self[key]=dict_obj[key]
+
+
+class CommentItem(scrapy.Item):
+    # item 的唯一标识 用源网址
+    _id=scrapy.Field()
+    #比如0度，36度，等一级分类
+    keyword=scrapy.Field()
+    title=scrapy.Field()
+    sourceUrl=scrapy.Field()
+    #源网站的名称
+    sourceSiteName=scrapy.Field()
+    sourceName=scrapy.Field()
+    updateTime=scrapy.Field()
+    relateUrl=scrapy.Field()
+    comments=scrapy.Field()
+
+
+

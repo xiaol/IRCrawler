@@ -554,7 +554,11 @@ class GoogleFocusNewsSpider(scrapy.Spider):
         print "title,%s"%title
         bracket_pat=re.compile(r'\(.*?\)')
         title=re.sub(bracket_pat, '', title)
+        bracket_pat_1=re.compile(r'（.*?）')
+        title=re.sub(bracket_pat_1, '', title)
+
         return title
+
 
 
     def generatePartialItem(self,theme_page):
@@ -571,8 +575,6 @@ class GoogleFocusNewsSpider(scrapy.Spider):
 
             title=re.findall(self.partial_title_pat,theme_page)
             partial_item['title']=self.trim_bracket(title[0])
-
-
             print "title,%s"%partial_item['title']
             description=re.findall(self.partial_description_pat,theme_page)
             partial_item['description']=description[0]
