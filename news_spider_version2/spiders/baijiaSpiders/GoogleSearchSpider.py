@@ -53,9 +53,10 @@ class GoogleSearchSpider(scrapy.Spider):
         self.infoStr_pattern = re.compile(r'replyData=({.*?});', re.DOTALL)
         url_response=self.getHtmlContentUnicode(self.start_urls[0])
         print "url_response,%s"%url_response
-        r = requests.get(self.start_urls[0])
-        dom = etree.HTML(r.text)
-        print "r.txt,%s"%r.text
+
+        # r = requests.get(self.start_urls[0])
+        # dom = etree.HTML(r.text)
+        # print "r.txt,%s"%r.text
 
 
 
@@ -163,7 +164,9 @@ class GoogleSearchSpider(scrapy.Spider):
 
     def parse(self,response):
 
-        print "response,%s"%response
+        print "response_body,"
+        print response.body
+        print "response_body_end"
         items=[]
         itemMetas=[]
         # keyword=self.getKeyword(response)
