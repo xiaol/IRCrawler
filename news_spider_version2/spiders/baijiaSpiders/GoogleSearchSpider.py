@@ -55,7 +55,7 @@ class GoogleSearchSpider(scrapy.Spider):
         self.infoStr_pattern = re.compile(r'replyData=({.*?});', re.DOTALL)
         html_parser = HTMLParser.HTMLParser()
         url_response=self.getHtmlContentUnicode(self.start_urls[0])
-        print "url_response,%s"%url_response
+        # print "url_response,%s"%url_response
 
         # r = requests.get(self.start_urls[0])
         # dom = etree.HTML(r.text)
@@ -69,7 +69,7 @@ class GoogleSearchSpider(scrapy.Spider):
 
         r = requests.get(sourceUrl)
         dom = etree.HTML(r.text)
-        print "r.txt,%s"%r.text
+        # print "r.txt,%s"%r.text
 
         # print "dom,%s"%dom.xpath('//div[@class="actions cf"][1]/a/text()')
         if len(dom.xpath('//div[@class="actions cf"]/a/@href')):
@@ -109,7 +109,7 @@ class GoogleSearchSpider(scrapy.Spider):
         if infoStr:
             infoStr = infoStr.group(1)
         try:
-            print "infoStr,%s"%infoStr
+            # print "infoStr,%s"%infoStr
             dict_obj=json.loads(infoStr)
             comments_list=[]
             for elem in dict_obj['hotPosts']:
@@ -153,7 +153,7 @@ class GoogleSearchSpider(scrapy.Spider):
         if infoStr:
             infoStr = infoStr.group(1)
         try:
-            print "infoStr,%s"%infoStr
+            # print "infoStr,%s"%infoStr
             dict_obj=json.loads(infoStr)
             comments_list=[]
             if "thread" in dict_obj.keys():
@@ -167,9 +167,9 @@ class GoogleSearchSpider(scrapy.Spider):
 
     def parse(self,response):
 
-        print "response_body,"
-        print response.body
-        print "response_body_end"
+        # print "response_body,"
+        # print response.body
+        # print "response_body_end"
         items=[]
         itemMetas=[]
         # keyword=self.getKeyword(response)
@@ -184,7 +184,7 @@ class GoogleSearchSpider(scrapy.Spider):
             item=CommentItem()
             item['keyword']=self.keyword
             # print news_block_item.extract()
-            print "news_block_item,%s"%news_block_item.extract()
+            # print "news_block_item,%s"%news_block_item.extract()
             try:
                 sourceUrl=news_block_item.xpath('./div/h3/a/@href').extract()[0]
             except IndexError:
@@ -197,7 +197,7 @@ class GoogleSearchSpider(scrapy.Spider):
             comments_content=self.getHtmlContentUnicode(commentUrl)
             item['comments']=self.extractComments(comments_content)
             try:
-                title = news_block_item.xpath('./div/h3/a/text()').extract()[0]
+                title = news_block_item.xpath('./div/h3/a/descendant-or-self::text()').extract()[0]
             except IndexError:
                 continue
             titleStr=''.join(title)
