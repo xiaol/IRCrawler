@@ -82,6 +82,8 @@ class GoogleSearchSpider(scrapy.Spider):
             if comment_result:
                 comment_result=comment_result.group(1)
                 commentUrl="http://comment.news.163.com/data/"+comment_result+"/df/"+sourceUrl.split("/")[-1]
+            else:
+                commentUrl=""
             # commentUrl=dom.xpath('//div[@class="ep-tie-top"]/a[@class="ep-cnum-tie js-tielink js-tiecount JS_NTES_LOG_FE"]/@href')[0]
             return commentUrl
 
@@ -192,7 +194,7 @@ class GoogleSearchSpider(scrapy.Spider):
             # sourceUrl="http://news.163.com/15/0506/02/AOT9E0AL00014AED.html"
             item['_id']=sourceUrl
             item['sourceUrl']=sourceUrl
-            # souceUrl="http://news.163.com/15/0506/02/AOT9E0AL00014AED.html"
+            # sourceUrl="http://sports.163.com/15/0519/09/APVFRLN900051C9U.html"
             commentUrl=self.extractcomment(sourceUrl)
             comments_content=self.getHtmlContentUnicode(commentUrl)
             item['comments']=self.extractComments(comments_content)
