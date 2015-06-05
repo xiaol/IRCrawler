@@ -137,9 +137,9 @@ class GoogleSearchSpider(scrapy.Spider):
                         comment_dict[k]['down']=None
 
                     if "timg" in v.keys():
-                        comment_dict[k]['profile_image_url']=v['timg']
+                        comment_dict[k]['author_img_url']=v['timg']
                     else:
-                        comment_dict[k]['profile_image_url']=None
+                        comment_dict[k]['author_img_url']=None
                 comments_list.append(comment_dict)
 
             return comments_list
