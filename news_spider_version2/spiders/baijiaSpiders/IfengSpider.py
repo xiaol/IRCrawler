@@ -1,40 +1,28 @@
 #coding=utf-8
 import urllib2
-
 import charade
-
-# from myproject.spiders.utils import AreaReader, CrawlerUtils
 import requests
 import lxml.etree as etree
-
-__author__ = 'galois'
-
 import scrapy
 import re
 from news_spider_version2.items import CommentItem
-# from boilerpipe.extract import Extractor
 import urlparse
-# from utils.AreaReader import AreaReader
-# from utils.CrawlerUtils import CrawlerUtils
 import urllib, cStringIO
-# from PIL import Image
 import json
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 import HTMLParser
+import datetime
 
 # 'scrapy crawl news.baidu.com -a url=' + url_here + ' -a topic=\"'+ topic + '\"'
 
-class GoogleSearchSpider(scrapy.Spider):
-    name='google.com.hk'
+class IfengSpider(scrapy.Spider):
+    name='ifeng.com'
     allowed_domains=['google.com.hk']
-    # keywords=AreaReader.readArea('/Users/galois/exercise/scrapy/myproject/AreaFile.txt')
-    # https://www.google.com.hk/?gws_rd=ssl#safe=strict&q=site:163.com++%E7%BD%91%E6%9B%9D%E5%9B%9B%E5%B7%9D%E6%83%85%E4%BE%A3
-    # file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/https-::www.google.com.hk:%3Fgws_rd=ssl%23safe=strict&q=site-163.com++%25E7%25BD%2591%25E6%259B%259D%25E5%259B%259B%25E5%25B7%259D%25E6%2583%2585%25E4%25BE%25A3.html
-    source_site="网易新闻"
+    source_site="凤凰新闻"
 
     def __init__(self, url=None, topic=None, *args, **kwargs):
 
-        super(GoogleSearchSpider, self).__init__(*args, **kwargs)
+        super(IfengSpider, self).__init__(*args, **kwargs)
         # keywords = []
         self.start_urls=[]
         topic = topic.split('s')
@@ -43,8 +31,8 @@ class GoogleSearchSpider(scrapy.Spider):
         print self.keyword, self.relate_url
         # for keyword in keywords:
         # self.start_urls.append('https://www.google.com.hk/?gws_rd=ssl#safe=strict&q=site:163.com++%s'%self.keyword)
-        self.start_urls.append('https://www.google.com.hk/search?q=site:163.com++%s&num=100&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a&channel=fflb'%self.keyword)
-        # self.start_urls.append('file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/com++%s.html'%self.keyword)
+        # self.start_urls.append('https://www.google.com.hk/search?q=site:ifeng.com++%s&num=100&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a&channel=fflb'%self.keyword)
+        self.start_urls.append('file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/com++%s.html'%self.keyword)
         for e in self.start_urls:
             print ">>>>>>", e
 
@@ -54,7 +42,7 @@ class GoogleSearchSpider(scrapy.Spider):
         self.comment_pattern = re.compile(r'boardId = "(.*?)"')
         self.infoStr_pattern = re.compile(r'replyData=({.*?});', re.DOTALL)
         html_parser = HTMLParser.HTMLParser()
-        url_response=self.getHtmlContentUnicode(self.start_urls[0])
+        # url_response=self.getHtmlContentUnicode(self.start_urls[0])
         # print "url_response,%s"%url_response
 
         # r = requests.get(self.start_urls[0])
@@ -92,7 +80,7 @@ class GoogleSearchSpider(scrapy.Spider):
         # headers={'User-Agent': 'Mozilla/5.0'}
         try:
             request=urllib2.Request(url)
-            connection=urllib2.urlopen(request,timeout=50)
+            connection=urllib2.urlopen(request,timeout=5)
             data=connection.read()
             encoding=connection.headers['content-type'].lower().split('charset=')[-1]
             if encoding.lower() == 'text/html':
@@ -107,41 +95,23 @@ class GoogleSearchSpider(scrapy.Spider):
     def extractComments(self,infoStr):
         if not infoStr:
             return None
-        infoStr = re.search(self.infoStr_pattern, infoStr)
-        if infoStr:
-            infoStr = infoStr.group(1)
+        # infoStr = re.search(self.infoStr_pattern, infoStr)
+        # if infoStr:
+        #     infoStr = infoStr.group(1)
         try:
             # print "infoStr,%s"%infoStr
             dict_obj=json.loads(infoStr)
             comments_list=[]
-            for elem in dict_obj['hotPosts']:
-                comment_dict={}
-
-                for (k, v) in  elem.items():
-                    print k
-                    comment_dict[k]={}
-                    comment_dict[k]['message']=v['b']
-                    if "t" in v.keys():
-                        comment_dict[k]['created_at']=v['t']
-                    else:
-                        comment_dict[k]['created_at']=None
-                    comment_dict[k]['author_name']=self.removeformat(v['f'])
-                    comment_dict[k]['post_id']=v['p']
-                    if "v" in v.keys():
-                        comment_dict[k]['up']=v['v']
-                    else:
-                        comment_dict[k]['up']=None
-                    if "a" in v.keys():
-                        comment_dict[k]['down']=v['a']
-                    else:
-                        comment_dict[k]['down']=None
-
-                    if "timg" in v.keys():
-                        comment_dict[k]['author_img_url']=v['timg']
-                    else:
-                        comment_dict[k]['author_img_url']=None
+            for elem in dict_obj['comments']:
+                comment_dict = {}
+                comment_dict['message'] = elem['comment_contents']
+                comment_dict['created_at'] = self.convertsecondtoTimestr(int(elem['create_time']))
+                comment_dict['author_name'] = elem['uname']
+                comment_dict['post_id'] = elem['comment_id']
+                comment_dict['up'] = elem['uptimes']
+                comment_dict['down'] = int(0)
+                comment_dict['author_img_url'] = elem['faceurl']
                 comments_list.append(comment_dict)
-
             return comments_list
         except Exception as e:
             print e
@@ -174,50 +144,37 @@ class GoogleSearchSpider(scrapy.Spider):
 
     def parse(self,response):
 
-        # print "response_body,"
-        # print response.body
-        # print "response_body_end"
-        items=[]
-        itemMetas=[]
-        # keyword=self.getKeyword(response)
-        #
-        # news_blocks=response.xpath('//ul')[0]
-        # news_block_items=news_blocks.xpath('./li')
+        sourceUrlItem=response.xpath('//div[@class="_I2"]')[0].extract()
+        print "sourceUrlItem,%s"%sourceUrlItem
+        try:
+            sourceUrl=response.xpath('//div[@class="_I2"]/a/@data-href').extract()[0]
+        except IndexError:
+            sourceUrl=response.xpath('//div[@class="_I2"]/a/@href').extract()[0]
 
-        news_block_items=response.xpath('//div[@class="srg"]/li[@class="g"]')[0]
-        news_block_items_ex=[]
-        news_block_items_ex.append(news_block_items)
-        for news_block_item in news_block_items_ex:
-            item=CommentItem()
-            item['keyword']=self.keyword
-            # print news_block_item.extract()
-            # print "news_block_item,%s"%news_block_item.extract()
-            try:
-                sourceUrl=news_block_item.xpath('./div/h3/a/@href').extract()[0]
-            except IndexError:
-                continue
-            # sourceUrl="http://news.163.com/15/0506/02/AOT9E0AL00014AED.html"
-            item['_id']=sourceUrl
-            item['sourceUrl']=sourceUrl
-            # sourceUrl="http://sports.163.com/15/0519/09/APVFRLN900051C9U.html"
-            commentUrl=self.extractcomment(sourceUrl)
-            comments_content=self.getHtmlContentUnicode(commentUrl)
-            item['comments']=self.extractComments(comments_content)
-            try:
-                title = news_block_item.xpath('./div/h3/a/descendant-or-self::text()').extract()[0]
-            except IndexError:
-                continue
-            titleStr=''.join(title)
-            item['title']=titleStr.split('_')[0]
-            item['updateTime']=self.extractupdateTime(comments_content)
-            source_site=self.source_site
-            source_site_name=self.source_site
-            item['sourceSiteName']=source_site_name
-            item['sourceName']=source_site_name
-            item['relateUrl'] = self.relate_url
+        item=CommentItem()
+        item['keyword']=self.keyword
+        item['_id']=sourceUrl
+        item['sourceUrl']=sourceUrl
+        # commentUrl=self.extractcomment(sourceUrl)
+        # sourceUrl = 'http://news.ifeng.com/a/20150608/43931984_0.shtml'
+        comments_content=self.getHtmlContentUnicode(sourceUrl)
+        item['comments']=self.extractComments(comments_content)
+        try:
+            title = response.xpath('//div[@class="_I2"]/a/descendant-or-self::text()').extract()[0]
+        except IndexError:
+            print "IndexError"
 
-            # if len(item['content'])>20:
-            yield item
+
+        titleStr=''.join(title)
+        item['title'] = titleStr.split('_')[0]
+        item['updateTime'] = CrawlerUtils.getDefaultTimeStr()
+        source_site_name = self.source_site
+        item['sourceSiteName'] = source_site_name
+        item['sourceName'] = source_site_name
+        item['relateUrl'] = self.relate_url
+
+        # if len(item['content'])>20:
+        yield item
 
         print "****************************************************"
 
@@ -333,19 +290,22 @@ class GoogleSearchSpider(scrapy.Spider):
 
 
 
-    def getHtmlContentUnicode(self,url):
-        # headers={'User-Agent': 'Mozilla/5.0'}
+    def getHtmlContentUnicode(self,sourceUrl):
+        headers={'User-Agent': 'Mozilla/5.0'}
         try:
-            request=urllib2.Request(url)
-            connection=urllib2.urlopen(request,timeout=5)
-            data=connection.read()
-            encoding=connection.headers['content-type'].lower().split('charset=')[-1]
+            url = 'http://comment.ifeng.com/get?job=1&orderby=uptimes&order=DESC&format=json&pagesize=10'
+            values = {'p': str(1), 'docurl': sourceUrl}
+            data = urllib.urlencode(values)
+            request = urllib2.Request(url, data, headers)
+            connection = urllib2.urlopen(request,timeout=50)
+            data = connection.read()
+            encoding = connection.headers['content-type'].lower().split('charset=')[-1]
             if encoding.lower() == 'text/html':
                 encoding = charade.detect(data)['encoding']
             # if encoding.lower()=='gb2312':
             #     encoding='gbk'
             if encoding:
-                data = data.decode(encoding=encoding,errors='ignore')
+                data = data.decode(encoding=encoding, errors='ignore')
             return data
         except Exception,e:
             print str(e)
@@ -413,7 +373,14 @@ class GoogleSearchSpider(scrapy.Spider):
         paras=content.split('\n\n')
         # for para in paras:
 
-
+    def convertsecondtoTimestr(self, time):
+        format='%Y-%m-%d %H:%M:%S'
+        # starttime=datetime.datetime(1970,1,1)
+        starttime=datetime.datetime(1970, 1, 1, 8, 0)
+        timeDelta=datetime.timedelta(milliseconds=time*1000)
+        defaultTime=starttime+timeDelta
+        defaultTimestr=defaultTime.strftime(format)
+        return defaultTimestr
 
 
 

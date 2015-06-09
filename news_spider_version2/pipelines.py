@@ -137,16 +137,26 @@ class NewsSpiderVersion2Pipeline(object):
             print "google_search start save"
             relateUrl = item['relateUrl']
             idItem={'relateUrl': relateUrl}
-
             doc_comment = self.commentColl.find_one(idItem)
             if doc_comment:
                 log.msg("Item %s alread exists in  database " %(item['_id']),
                     level=log.DEBUG, spider=spider)
                 if doc_comment["comments"] is not None:
                     comments=doc_comment["comments"]
+                else:
+                    comments=[]
+                if item["comments"] is not None:
                     for comments_elem in comments:
                         item["comments"].append(comments_elem)
-            self.commentColl.save(dict(item))
+                elif len(comments)>0:
+                    item["comments"]=comments
+                else:
+                    item["comments"]=None
+
+                self.commentColl.update(idItem, {"$set": {"comments": item["comments"]}})
+
+            else:
+                self.commentColl.save(dict(item))
             print "google_search url end save"
 
         return item
