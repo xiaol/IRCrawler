@@ -31,8 +31,8 @@ class IfengSpider(scrapy.Spider):
         print self.keyword, self.relate_url
         # for keyword in keywords:
         # self.start_urls.append('https://www.google.com.hk/?gws_rd=ssl#safe=strict&q=site:163.com++%s'%self.keyword)
-        # self.start_urls.append('https://www.google.com.hk/search?q=site:ifeng.com++%s&num=100&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a&channel=fflb'%self.keyword)
-        self.start_urls.append('file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/com++%s.html'%self.keyword)
+        self.start_urls.append('https://www.google.com.hk/search?q=site:ifeng.com++%s&num=100&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a&channel=fflb'%self.keyword)
+        # self.start_urls.append('file:///Users/yangjiwen/Documents/xiongjun/GoogleNewsHtml/com++%s.html'%self.keyword)
         for e in self.start_urls:
             print ">>>>>>", e
 
@@ -111,6 +111,7 @@ class IfengSpider(scrapy.Spider):
                 comment_dict['up'] = elem['uptimes']
                 comment_dict['down'] = int(0)
                 comment_dict['author_img_url'] = elem['faceurl']
+                comment_dict['type'] = 'ifeng'
                 comments_list.append(comment_dict)
             return comments_list
         except Exception as e:
