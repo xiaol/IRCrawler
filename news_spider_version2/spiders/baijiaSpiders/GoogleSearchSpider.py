@@ -174,9 +174,9 @@ class GoogleSearchSpider(scrapy.Spider):
 
     def parse(self,response):
 
-        # print "response_body,"
-        # print response.body
-        # print "response_body_end"
+        print "response_body,"
+        print response.body
+        print "response_body_end"
         items=[]
         itemMetas=[]
         # keyword=self.getKeyword(response)

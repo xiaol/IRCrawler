@@ -144,7 +144,9 @@ class IfengSpider(scrapy.Spider):
 
 
     def parse(self,response):
-
+        print "response_body,"
+        print response.body
+        print "response_body_end"
         sourceUrlItem=response.xpath('//div[@class="_I2"]')[0].extract()
         print "sourceUrlItem,%s"%sourceUrlItem
         try:
