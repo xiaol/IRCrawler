@@ -147,12 +147,17 @@ class IfengSpider(scrapy.Spider):
         print "response_body,"
         print response.body
         print "response_body_end"
-        sourceUrlItem=response.xpath('//div[@class="_I2"]')[0].extract()
-        print "sourceUrlItem,%s"%sourceUrlItem
+        # sourceUrlItem=response.xpath('//div[@class="_I2"]')[0].extract()
+        # print "sourceUrlItem,%s"%sourceUrlItem
         try:
             sourceUrl=response.xpath('//div[@class="_I2"]/a/@data-href').extract()[0]
         except IndexError:
-            sourceUrl=response.xpath('//div[@class="_I2"]/a/@href').extract()[0]
+            try:
+                sourceUrl=response.xpath('//div[@class="_I2"]/h3/a/@href').extract()[0]
+            except IndexError:
+                # print "extract,%s"%response.xpath('//div[@class="rc"]/h3/a/@href').extract()
+                sourceUrl=response.xpath('//div[@class="rc"]/h3/a/@href').extract()[0]
+
 
         item=CommentItem()
         item['keyword']=self.keyword
@@ -163,7 +168,7 @@ class IfengSpider(scrapy.Spider):
         comments_content=self.getHtmlContentUnicode(sourceUrl)
         item['comments']=self.extractComments(comments_content)
         try:
-            title = response.xpath('//div[@class="_I2"]/a/descendant-or-self::text()').extract()[0]
+            title = response.xpath('//div[@class="rc"]/h3/a/descendant-or-self::text()').extract()[0]
         except IndexError:
             print "IndexError"
 
