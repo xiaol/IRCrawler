@@ -104,7 +104,7 @@ class IfengSpider(scrapy.Spider):
             comments_list=[]
             for elem in dict_obj['comments']:
                 comment_dict = {}
-                comment_dict['message'] = elem['comment_contents']
+                comment_dict['message'] = CrawlerUtils.removeUnwantedTag(elem['comment_contents'])
                 comment_dict['created_at'] = self.convertsecondtoTimestr(int(elem['create_time']))
                 comment_dict['author_name'] = elem['uname']
                 comment_dict['post_id'] = elem['comment_id']

@@ -120,7 +120,7 @@ class GoogleSearchSpider(scrapy.Spider):
                 for (k, v) in  elem.items():
                     print k
                     comment_dict[k]={}
-                    comment_dict[k]['message']=v['b']
+                    comment_dict[k]['message']=CrawlerUtils.removeUnwantedTag(v['b'])
                     if "t" in v.keys():
                         comment_dict[k]['created_at']=v['t']
                     else:
