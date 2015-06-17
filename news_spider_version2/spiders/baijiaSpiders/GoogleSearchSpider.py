@@ -21,6 +21,10 @@ import urllib, cStringIO
 import json
 from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
 import HTMLParser
+import time
+import random
+import socket
+import hashlib
 
 # 'scrapy crawl news.baidu.com -a url=' + url_here + ' -a topic=\"'+ topic + '\"'
 
@@ -140,12 +144,31 @@ class GoogleSearchSpider(scrapy.Spider):
                         comment_dict[k]['author_img_url']=v['timg']
                     else:
                         comment_dict[k]['author_img_url']=None
+                    comment_dict[k]['comment_id'] = self.guid('163')
                 comments_list.append(comment_dict)
 
             return comments_list
         except Exception as e:
             print e
             return None
+
+
+    def guid(self, *args):
+        """
+        Generates a universally unique ID.
+        Any arguments only create more randomness.
+        """
+        t = long( time.time() * 1000 )
+        r = long( random.random()*100000000000000000L )
+        try:
+            a = socket.gethostbyname( socket.gethostname() )
+        except:
+            # if we can't get a network address, just imagine one
+            a = random.random()*100000000000000000L
+        data = str(t)+' '+str(r)+' '+str(a)+' '+str(args)
+        data = hashlib.md5(data).hexdigest()
+
+        return data
 
     def removeformat(self, name):
         name=CrawlerUtils.removeUnwantedTag(name)
