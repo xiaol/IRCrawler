@@ -104,14 +104,15 @@ class IfengSpider(scrapy.Spider):
             comments_list=[]
             for elem in dict_obj['comments']:
                 comment_dict = {}
-                comment_dict['message'] = CrawlerUtils.removeUnwantedTag(elem['comment_contents'])
-                comment_dict['created_at'] = self.convertsecondtoTimestr(int(elem['create_time']))
-                comment_dict['author_name'] = elem['uname']
-                comment_dict['post_id'] = elem['comment_id']
-                comment_dict['up'] = elem['uptimes']
-                comment_dict['down'] = int(0)
-                comment_dict['author_img_url'] = elem['faceurl']
-                comment_dict['type'] = 'ifeng'
+                comment_dict['1'] = {}
+                comment_dict['1']['message'] = CrawlerUtils.removeUnwantedTag(elem['comment_contents'])
+                comment_dict['1']['created_at'] = self.convertsecondtoTimestr(int(elem['create_time']))
+                comment_dict['1']['author_name'] = elem['uname']
+                comment_dict['1']['post_id'] = elem['comment_id']
+                comment_dict['1']['up'] = elem['uptimes']
+                comment_dict['1']['down'] = int(0)
+                comment_dict['1']['author_img_url'] = elem['faceurl']
+                comment_dict['1']['type'] = 'ifeng'
                 comments_list.append(comment_dict)
             return comments_list
         except Exception as e:
