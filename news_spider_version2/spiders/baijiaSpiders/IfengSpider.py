@@ -47,6 +47,7 @@ class IfengSpider(scrapy.Spider):
         self.comment_pattern = re.compile(r'boardId = "(.*?)"')
         self.infoStr_pattern = re.compile(r'replyData=({.*?});', re.DOTALL)
         html_parser = HTMLParser.HTMLParser()
+        self.page_url_pattern = re.compile(r'^http://.*?html$')
         # url_response=self.getHtmlContentUnicode(self.start_urls[0])
         # print "url_response,%s"%url_response
 
@@ -189,9 +190,13 @@ class IfengSpider(scrapy.Spider):
         item['_id']=sourceUrl
         item['sourceUrl']=sourceUrl
         # commentUrl=self.extractcomment(sourceUrl)
-        # sourceUrl = 'http://news.ifeng.com/a/20150608/43931984_0.shtml'
+        # sourceUrl = 'http://news.ifeng.com/a/2015060'
         comments_content=self.getHtmlContentUnicode(sourceUrl)
-        item['comments']=self.extractComments(comments_content)
+        if re.match(self.page_url_pattern, sourceUrl):
+            item['comments']=self.extractComments(comments_content)
+        else:
+            item['comments'] = None
+
         try:
             title = response.xpath('//div[@class="rc"]/h3/a/descendant-or-self::text()').extract()[0]
         except IndexError:
