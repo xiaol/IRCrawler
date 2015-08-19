@@ -280,7 +280,7 @@ class NeteasePhotoSpider(scrapy.Spider):
 
                     # json_elem=json_elem.decode('utf-8')
             dict_obj=json.loads(imgWalljson_elem)
-            listInfos.append({'img':dict_obj['img'],'note':dict_obj['note']})
+            listInfos.append({'img':dict_obj['oimg'],'note':dict_obj['note']})
         return listInfos
 
 
