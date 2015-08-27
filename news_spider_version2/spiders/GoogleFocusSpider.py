@@ -568,6 +568,7 @@ class GoogleFocusNewsSpider(scrapy.Spider):
             theme_page_url=re.findall(self.nonpage_url_pat,theme_page)
             print "theme_page_url,%s"%theme_page_url
             partial_item=GoogleNewsItem()
+            partial_item['page']=str(theme_page.extract())
             partial_item['sourceUrl']=theme_page_url[0]
             partial_item['_id']=theme_page_url[0]
 

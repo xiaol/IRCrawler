@@ -89,6 +89,7 @@ class GoogleNewsItem(scrapy.Item):
     imgWall=scrapy.Field()
     tag=scrapy.Field()
     content=scrapy.Field()
+    page = scrapy.Field()
 
     def cloneInfoFromDict(self,dict_obj):
         keys=['title','root_class','channel','content','imgUrl',
