@@ -207,8 +207,11 @@ class GoogleSearchSpider(scrapy.Spider):
         #
         # news_blocks=response.xpath('//ul')[0]
         # news_block_items=news_blocks.xpath('./li')
+        try:
+            news_block_items=response.xpath('//div[@class="srg"]/li[@class="g"]')[0]
+        except:
+            news_block_items=response.xpath('//div[@class="srg"]/div[@class="g"]')[0]
 
-        news_block_items=response.xpath('//div[@class="srg"]/li[@class="g"]')[0]
         news_block_items_ex=[]
         news_block_items_ex.append(news_block_items)
         for news_block_item in news_block_items_ex:
