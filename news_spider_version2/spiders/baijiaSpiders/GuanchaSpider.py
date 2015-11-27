@@ -1,0 +1,352 @@
+__author__ = 'yangjiwen'
+#coding=utf-8
+import json
+from news_spider_version2.items import NewsItem,GoogleNewsItem
+from news_spider_version2.spiders.utils.CrawlerUtils import CrawlerUtils
+import datetime
+import scrapy
+import re
+import time
+
+import HTMLParser
+
+
+class GuanchaSpider(scrapy.Spider):
+    name='GuanchaSpider'
+    # allowed_domains=['guancha.cn']
+
+    start_urls=['http://www.guancha.cn/toutiao/list_1.shtml']
+
+
+    # start_urls=['http://www.guancha.cn/economy/2015_04_15_316010.shtml']
+    # start_urls=['http://www.guancha.cn/Third-World/2015_04_12_315587.shtml']
+
+    root_class='40度'
+    #一级分类下面的频道
+    default_channel='最热门'
+     #源网站的名称
+    sourceSiteName='观察者网'
+
+    channel_pat=re.compile(r'<a href="/.+?">(.*?)</a>')
+    url_pattern=re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+    page_url_pattern=re.compile(r'^http://www\.guancha\.cn/.*?/[0-9_]+?.shtml$')
+
+    total_pages_pattern=re.compile(r'<span class="page-ch">.*?(\d+).*?</span>')
+    page_lists_pat=re.compile(r'<a href="(.*?)" class="page-en">\d+</a>')
+
+
+    title_pat1=re.compile(r'<h2 class="content-title1">(.+?)</h2>')
+    title_pat2=re.compile(r'<span id="seq">\s*?([\w ( ) /]+)\s*?</span>')
+
+    tag_pat=re.compile(r'<a target="_blank" href=".+?">(.+?)</a>')
+
+    time_pat=re.compile(r'<p>(.*?)</p>')
+    digital_pat=re.compile(r'\d+')
+
+    content_pat=re.compile(r'<p.*?</p>',re.DOTALL)
+    # img_pat=re.compile(r'<div class="post-img".*?url[()](http://cdn\.pingwest\.com.*?\.jpg)[()]">')
+    img_pat=re.compile(r'<img src="(http://i\.guancha\.cn.*?.jpg)"')
+ # <img src="http://i.guancha.cn/news/2015/04/12/20150412151925923.jpg">
+    para_pat=re.compile(r'<p.*?>(.*?)</p>',re.DOTALL)
+
+    previous_page_pat=re.compile(r'<a class="next page-numbers" href="([^"]*?)">')
+    # <a href="/economy/2015_04_15_316010.shtml" class="title_1st" target="_blank">亚投行首发阵容确定 共57国 南非加入 </a>
+
+    nonpage_url_pat=re.compile(r'<a href="(.*?)" class="title_1st" target="_blank">.*?</a>')
+    # http://www.lensmagazine.com.cn/category/reporting/focus/page/4
+    end_content_str='Mtime时光网专稿 未经许可不得转载'
+
+
+    # http://tu.duowan.com/g/01/82/e7.html
+    html_parser = HTMLParser.HTMLParser()
+    channel_map={'wtf':'冷新闻','WTF':'冷新闻','sex':'冷新闻','SEX':'冷新闻','爷有钱':'冷新闻',
+       'diy':'冷知识','DIY':'冷知识','MEME':'冷知识','GEEK':'冷知识','meme':'冷知识','geek':'冷知识','小贴士':'冷知识',
+        '笨贼':'冷幽默','熊孩子':'冷幽默'
+    }
+
+    def parse(self,response):
+
+
+        url=response._get_url()
+        if self.isPage(response,url):
+            yield self.dealWithPage(response,url)
+        else:
+            results=self.dealWtihNonPage(response,url)
+            for result in results:
+                yield(result)
+
+    def isPage(self,response,url):
+            if None==url:
+                return False
+            if re.match(self.page_url_pattern,url):
+                return True
+            return False
+
+
+
+
+
+
+    def dealWithPage(self,response,url):
+        # item 的唯一标识 用源网址
+        item=GoogleNewsItem()
+        item['sourceUrl']=url
+        item['_id']=self.generateItemId(item)
+        item['root_class']=self.extractRootClass(response)
+        item['channel']=self.extractChannel(response,item)
+        item['updateTime']=self.extractTime(response)
+        item['createTime']=self.extractcreateTime(response)
+        item['title']=self.extractTitle(response)
+        item['content']=self.extractContent(response)
+        item['imgUrls']=self.extractImgUrl(response)
+        item['sourceSiteName']=self.extractSourceSiteName(response)
+        item['relate']=None
+        item['originsourceSiteName']=self.extractoriginsourceSiteName(response)
+        item['tag']=self.extractTag(response)
+        item['description']=self.extractDesc(response)
+        # item.printSelf()
+        return item
+
+
+
+    def extractoriginsourceSiteName(self,response):
+
+        return self.sourceSiteName
+
+    def extractcreateTime(self,response):
+        return CrawlerUtils.getDefaultTimeStr()
+
+
+    def generateItemId(self,item):
+        return item['sourceUrl']
+
+    def extractTitle(self,response):
+        raw_title_str=response.xpath('//div[@class="left-side2 pull-left"]').extract()[0]
+        searchResult1=re.search(self.title_pat1,raw_title_str)
+        # searchResult2=re.search(self.title_pat2,raw_title_str)
+        # title=searchResult1+searchResult2
+        if searchResult1:
+            title=searchResult1.group(1)
+            # title=searchResult1.group(1)
+            title=CrawlerUtils.removeUnwantedTag(title)
+
+            return title
+        return None
+
+    def extractTime(self,response):
+        raw_time_str=response.xpath('//div[@class="txt-info"]').extract()
+        print "raw,%s"%raw_time_str
+        searchResult=re.search(self.time_pat,str(raw_time_str))
+        if searchResult:
+            time=searchResult.group(1)
+            # time=time.decode('utf-8')
+            timestr=time.decode('unicode-escape')
+            timestr=timestr.encode('utf8')
+            return self.formatTime(timestr)
+        return CrawlerUtils.getDefaultTimeStr()
+    # '发表时间：2015-04-15 13:24:06'
+
+     # 2015-01-07 11:50:09
+    def formatTime(self,timeStr):
+        digitals=re.findall(self.digital_pat,timeStr)
+        resultArr=[]
+        i=0
+        for digit in digitals:
+            if len(digit)<2:
+                digit='0'+digit
+
+            resultArr.append(digit)
+            if i<2:
+                resultArr.append('-')
+            elif i==2:
+                resultArr.append(' ')
+            elif i<5:
+                resultArr.append(':')
+            i=i+1
+        # second=CrawlerUtils.getDefaultTimeStr().split(':')[-1]
+        # resultArr.append(second)
+        return ''.join(resultArr)
+
+
+
+    def extractRootClass(self,response):
+        return self.root_class
+
+    def extractChannel(self,response,item):
+        # rawContent=response.xpath('//div[@class="category-bar top-spacing6 bottom-spacing8"]').extract()[0]
+        # if not len(rawContent):
+        #     return None
+        #
+        # searchResult=re.search(self.channel_pat,rawContent)
+        # if searchResult:
+        #     return searchResult.group(1)
+        # #     return '热播剧'
+        # # #     return self.default_channel
+        # # channel=self.channel_map[item['tag'][0].lower().encode('utf-8')]
+        # # if channel:
+        # #     print "channel is %s " %channel
+        # #     return channel
+        return self.default_channel
+
+    def extractContent(self,response):
+        rawContent=response.xpath('//div[@class="left-side2 pull-left"]/div[@class="all-txt"]').extract()[0]
+        if not len(rawContent):
+            return None
+        listInfos=[]
+        # for rawContent in rawContents:
+
+        print "rawcontent,%s" %rawContent
+
+        find_result=re.findall(self.content_pat,rawContent)
+        print "rawcontent %s" %find_result
+        for line in find_result:
+            print "line,%s"%line
+            imgSearch=re.findall(self.img_pat,line)
+            if imgSearch:
+                for img in imgSearch:
+                    # img=re.search(self.img_pat,img)
+                    listInfos.append({'img':''.join(list(img))})
+                    print "img is %s" %''.join(list(img))
+
+            txtSearch=re.search(self.para_pat,line)
+            # txtSearch=rawContent.xpath('/div/text()')
+            if txtSearch:
+                result=txtSearch.group()
+                result=CrawlerUtils.removeParasedCode(result)
+                result=CrawlerUtils.removeScript(result)
+                result=CrawlerUtils.removeUnwantedTag(result)
+                if (not CrawlerUtils.isAllSpaces(result)) & (not CrawlerUtils.isPagesInfo(result)):
+                    result=CrawlerUtils.Q_space+CrawlerUtils.Q_space+result.strip()+'\n\n'
+                    if self.end_content_str in result:
+                        break
+                    print "txt is :%s" %result
+                    listInfos.append({'txt':result})
+            # print  "listInfos,%s" %listInfos
+        return CrawlerUtils.make_img_text_pair(listInfos)
+
+    def extractImgUrl(self,response):
+        rawContent=response.xpath('//div[@class="left-side2 pull-left"]/div[@class="all-txt"]').extract()[0]
+        if not len(rawContent):
+            return None
+        for line in re.findall(self.content_pat,rawContent):
+            imgSearch=re.findall(self.img_pat,line)
+            if imgSearch:
+                for img in imgSearch:
+                    # img=re.search(self.img_pat,img)
+                    return ''.join(list(img))
+
+            # imgSearch=re.search(self.img_pat,line)
+            # if imgSearch:
+            #     print "imgsearch,%s"%imgSearch
+            #     return imgSearch.group(0)
+        return None
+
+    def extractDesc(self,response):
+        rawContent=response.xpath('//div[@class="newsnote"]/text()').extract()
+
+        if rawContent:
+            return rawContent
+
+        return None
+
+
+    def extractSourceSiteName(self,response):
+        rawContent=response.xpath('//div[@class="category-bar top-spacing6 bottom-spacing8"]').extract()[0]
+        if not len(rawContent):
+            return None
+
+        searchResult=re.search(self.channel_pat,rawContent)
+        if searchResult:
+            SourceSiteName=searchResult.group(1)
+
+            print "SourceSiteName is %s " %SourceSiteName
+            return "观察"+SourceSiteName+"新闻"
+
+        return self.sourceSiteName
+
+    #获取文章的tag信息
+    def extractTag(self,response):
+        tag=response.xpath('//span[@class="keyword1 top-spacing3 bottom-padding3"]/a/text()').extract()
+        print "tag,%s"%tag
+        return tag
+
+
+    #处理不是页面的网址
+    def dealWtihNonPage(self,response,url):
+
+        # pages_arr=response.xpath('//div[@id="body"]/div[@id="content"]/div/div[@class="column"]/div[@class="post"]/h2/a/@href').extract()
+        pages_arr=response.xpath('//div[@class="hometopic"]/ul[@class="list05"]').extract()[0]  #/li[@class="box masonry-brick"
+        find_result=re.findall(self.nonpage_url_pat,pages_arr)
+        print "pages_arr,%s" %pages_arr
+        results=[]
+
+        for new_page_url_raw in find_result:
+            # searchResult=re.search(self.nonpage_url_pat,new_page_url_raw)
+            if new_page_url_raw:
+                new_page_url=new_page_url_raw    #.group(1)
+                new_page_url='http://www.guancha.cn'+new_page_url
+                print "new_page_url is %s" %new_page_url
+                results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
+        # prevoius_page_url=self.getPrevoiuPageUrl(response)
+        # print "pevoious_page_url,%s"%prevoius_page_url
+        # if prevoius_page_url:
+        #     results.append(scrapy.Request(prevoius_page_url,callback=self.parse,dont_filter=True))
+        return results
+
+
+
+        # for new_page_url in pages_arr:
+        #     results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=False))
+        # prevoius_page_url=self.getPrevoiuPageUrl(response)
+        # if prevoius_page_url:
+        #     results.append(scrapy.Request(new_page_url,callback=self.parse,dont_filter=True))
+        # return results
+
+# http://t.qianzhan.com//dazahui/p-2.html
+     #获取前面一页的url
+    def getPrevoiuPageUrl(self,response):
+        title_sign=u'下一页'
+        xpath_str='//div[@class="page-nav"]/ul[@class="pagination"]'.decode('utf8')
+        previousUrlsPath=response.xpath(xpath_str).extract()
+        print "previousUrlsPath,%s"%previousUrlsPath
+        searchResult=re.search(self.previous_page_pat,str(previousUrlsPath))
+
+        # print "hello"
+        if searchResult:
+            page_url_str=searchResult.group(1)
+            if page_url_str:
+                print "privious page's url is %s " %page_url_str
+                return page_url_str
+        return None
+
+    # def parseTotalPages(self,contentStr):
+    #     if None==contentStr:
+    #         return None
+    #     searchResult=re.search(self.total_pages_pattern,contentStr)
+    #     if searchResult:
+    #         return int(searchResult.group(1))
+    #     return None
+
+
+    # #提取当前页面的文件夹路径
+    # def extractBaseUrl(self,url):
+    #     if None==url:
+    #         return None
+    #     index=url.rfind("/")
+    #     return url[:index+1]
+
+
+
+
+    def main(self,url):
+       urlStr=self.getHtmlContentUnicode(url)
+       print urlStr
+
+
+
+
+if __name__=='__main__':
+    some_interface='http://jandan.duoshuo.com/api/threads/listPosts.json?thread_key=comment-2650694&url=http%3A%2F%2Fjandan.net%2Fooxx%2Fpage-1301%26yid%3Dcomment-2650694&image=http%3A%2F%2Fww1.sinaimg.cn%2Fmw600%2Fa00dfa2agw1enxg54qbbfj20n40x6755.jpg&require=site%2Cvisitor%2Cnonce%2CserverTime%2Clang&site_ims=1420356603&lang_ims=1420356603&v=140327'
+    print "the interface is %s"%some_interface
+    html_parser=HTMLParser.HTMLParser()
+    print "the unscaped is %s " %html_parser.unescape(some_interface)
