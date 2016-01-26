@@ -62,6 +62,15 @@ SPIDER_MIDDLEWARES = {
     'scrapy.contrib.spidermiddleware.offsite.OffsiteMiddleware': 543,
 }
 
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
+#     'news_spider_version2.spiders.baijiaSpiders.middlewares.ProxyMiddleware': 100,
+# }
+# DOWNLOADER_MIDDLEWARES = {
+#     'scrapyproduct.middlewares.ProxyMiddleware': 1,
+#     'scrapyproduct.middlewares.DelayAfterConnectionRefusedMiddleware': 510,
+# }
+
 # 设置爬取命令
 COMMANDS_MODULE='news_spider_version2.commands'
 
