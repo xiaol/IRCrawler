@@ -297,6 +297,7 @@ class CommentItem(scrapy.Item):
     updateTime=scrapy.Field()
     relateUrl=scrapy.Field()
     comments=scrapy.Field()
+    createTime=scrapy.Field()
 
 
 

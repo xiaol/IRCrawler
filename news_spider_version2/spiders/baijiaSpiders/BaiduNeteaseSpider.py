@@ -252,6 +252,7 @@ class BaiduNeteaseSpider(scrapy.Spider):
             item['sourceSiteName']=source_site_name
             item['sourceName']=source_site_name
             item['relateUrl'] = self.relate_url
+            item['createTime'] = CrawlerUtils.getDefaultTimeStr()
 
             # if len(item['content'])>20:
             yield item
